@@ -45,10 +45,10 @@ def D(k):
     return (n_com*k) + 10
 
 class Parameters:
-    def __init__(self, q_sym, q_asym, gamma, theta,
+    def __init__(self, q, gamma, theta,
                  delta1, delta2, delta3, delta4):
-        self.q_sym = q_sym
-        self.q_asym = q_asym
+        self.q_sym = q
+        self.q_asym = q_sym * 0.51
         self.gamma = gamma
         self.theta = theta
         self.delta1 = delta1
