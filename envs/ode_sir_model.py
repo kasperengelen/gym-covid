@@ -13,7 +13,7 @@ class OdeEpiModel:
     #running parts of a trajectory (for value iteration methods)
     #?
     
-    def __init__(self, N, K, init_model_state, beta, gamma):
+    def __init__(self, K, init_model_state, beta, gamma):
         #age groups
         self.K = K        
         #initial model state
@@ -23,7 +23,7 @@ class OdeEpiModel:
         #parameters
         self.beta = beta
         self.gamma = gamma
-        self.N = N
+        self.N = [75, 25]
         self.n_comp = 3
 
     #number of compartments in each age groups
@@ -41,13 +41,16 @@ class OdeEpiModel:
 
     #C is the contact matrix to be used,
     #would be used in beta
-    def simulate_day(self, C=0):
+    def simulate_day(self, C):
         #TODO: check the size of C
+        
         def deriv(y, t, N, beta, gamma):
             d_ = np.empty([(self.n_comp * self.K)])
             for k in range(self.K):
-                d_[self.S(k)] = -beta * y[self.S(k)] * y[self.I(k)] / N
-                d_[self.I(k)] = beta * y[self.S(k)] * y[self.I(k)] / N - gamma * y[self.I(k)]
+                
+                sum_c = sum([ C[k][j] * y[self.I(j)] / N[j] for j in range(len(C[k]))])
+                d_[self.S(k)] = -beta *  y[self.S(k)] * sum_c
+                d_[self.I(k)] = beta * y[self.S(k)] * sum_c - gamma * y[self.I(k)]
                 d_[self.R(k)] = gamma * y[self.I(k)]
 
             return d_
@@ -69,7 +72,7 @@ class OdeEpiModel:
         return self.current_model_state
         
             
-"""    
+""" 
 def main():
     # Parameters for SIR
     # K = number of age groups
@@ -80,12 +83,13 @@ def main():
     beta = 0.05
     # gamma
     gamma = 1/3
+    C = [[18, 9], [3, 12]]
 
     timesteps = 1
     ode_epi_model = OdeEpiModel(k, init_state, beta, gamma)
 
     for i in range(timesteps):        
-        print("state:", ode_epi_model.simulate_day())
+        print("state:", ode_epi_model.simulate_day(C))
 
 if __name__ == "__main__":
     main()

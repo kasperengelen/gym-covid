@@ -15,17 +15,17 @@ class EpiEnv(gym.Env):
         super(EpiEnv, self).__init__()
         # under the hood we run this epi model
         self.model = model
-        # TODO population size defined in model or in mdp?
-        N = 1000
+        # population size of each age-group is sum of the compartments
+        N = self.model.init_model_state.reshape((self.model.K, self.model.n_comp)).sum(1).repeat(self.model.n_comp)
         # contact matrix
-        self.C = np.ones((model.K, model.K))
+        self.C = np.array([[18, 9], [3, 12]]) #np.ones((model.K, model.K))
 
         # the observation space are compartments x age_groups
-        self.observation_space = Box(low=np.zeros(model.n_comp*model.K), high=np.full(model.n_comp*model.K, N), dtype=np.float32)
+        self.observation_space = Box(low=np.zeros(model.n_comp*model.K), high=N, dtype=np.float32)
         # action space is proportional reduction of work, school, leisure
         self.action_space = Box(low=np.zeros(3), high=np.ones(3), dtype=np.float32)
         # reward_space is attack-rate for infections, hospitalizations and reduction in social contact
-        self.reward_space = Box(low=np.zeros(3), high=np.array([N, N, 1]), dtype=np.float32)
+        self.reward_space = Box(low=np.zeros(3), high=np.array([N.sum(), N.sum(), 1]), dtype=np.float32)
 
     def reset(self):
         self.model.current_model_state = self.model.init_model_state
