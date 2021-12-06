@@ -1,3 +1,40 @@
+#number of compartments in each age groups
+n_comp = 10
+
+#functions to compute the index of each compartement
+def S(k):
+    return (n_com*k) + 0
+
+def E(k):
+    return (n_com*k) + 1
+
+def I_presym(k):
+    return (n_com*k) + 2
+
+def I_asym(k):
+    return (n_com*k) + 3
+
+def I_mild(k):
+    return (n_com*k) + 4
+
+def I_mild(k):
+    return (n_com*k) + 5
+
+def I_sev(k):
+    return (n_com*k) + 6
+
+def I_hosp(k):
+    return (n_com*k) + 7
+
+def I_icu(k):
+    return (n_com*k) + 8
+
+def R(k):
+    return (n_com*k) + 9
+
+def D(k):
+    return (n_com*k) + 10
+
 class Parameters:
     def __init__(self, q_sym, q_asym, gamma, theta,
                  delta1, delta2, delta3, delta4):
