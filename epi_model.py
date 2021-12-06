@@ -1,3 +1,12 @@
+def lambda_(k, C_asym, C_sym, state):
+    l_ = 0.0
+    for k_prime in range(K):
+        beta_asym = parameters.q_sym * C_sym[k][k_prime]
+        beta_sym = parameters.q_asym * C_asym[k][k_prime]
+        l_ += beta_asym * state[I_presym(k_prime)] + state[I_asym(k_prime)]
+        l_ += beta_sym * state[I_mild(k_prime)] + state[I_sev(k_prime)]
+    return l_
+
 #number of compartments in each age groups
 n_comp = 10
 
