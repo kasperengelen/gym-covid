@@ -14,6 +14,7 @@ def plot_simulation(states):
         ax.plot(r, c='g', label='r')
         ax.set_xlabel('week')
         ax.set_ylabel('pop')
+        ax.legend()
     plt.show()
 
 
