@@ -8,7 +8,7 @@ import numpy as np
 def epi_ode():
     # run for `steps` weeks
     # model with 2 age groups
-    model = OdeEpiModel(10000000, 2, np.array([7500000-1, 1, 0., 2500000, 1, 0]), 0.05, 1/3)
+    model = OdeEpiModel(10000000, 2, np.array([7500000-1, 1, 0., 2500000, 1, 0]), 0.05, 1/300)
     env = EpiEnv(model)
     return env
 
