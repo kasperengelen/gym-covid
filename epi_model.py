@@ -54,7 +54,6 @@ class Parameters:
         self.delta1 = delta1
         self.delta2 = delta2
         self.delta3 = delta3
-        self.delta4 = delta4
 
 class AgeParameters:
     def __init__(self, k, p, omega, phi, psi):
