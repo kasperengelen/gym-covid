@@ -18,7 +18,7 @@ class EpiEnv(gym.Env):
         # population size of each age-group is sum of the compartments
         N = self.model.init_model_state.reshape((self.model.K, self.model.n_comp)).sum(1).repeat(self.model.n_comp)
         # contact matrix
-        self.C = np.ones((model.K, model.K))
+        self.C = np.array([[18, 9], [3, 12]]) #np.ones((model.K, model.K))
 
         # the observation space are compartments x age_groups
         self.observation_space = Box(low=np.zeros(model.n_comp*model.K), high=N, dtype=np.float32)
