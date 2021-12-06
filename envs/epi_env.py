@@ -16,7 +16,7 @@ class EpiEnv(gym.Env):
         # under the hood we run this epi model
         self.model = model
         # population size of each age-group is sum of the compartments
-        N = self.model.init_model_state.reshape((self.model.K, self.model.n_comp)).sum(1)
+        N = self.model.init_model_state.reshape((self.model.K, self.model.n_comp)).sum(1).repeat(self.model.n_comp)
         # contact matrix
         self.C = np.ones((model.K, model.K))
 
@@ -25,7 +25,7 @@ class EpiEnv(gym.Env):
         # action space is proportional reduction of work, school, leisure
         self.action_space = Box(low=np.zeros(3), high=np.ones(3), dtype=np.float32)
         # reward_space is attack-rate for infections, hospitalizations and reduction in social contact
-        self.reward_space = Box(low=np.zeros(3), high=np.array([N, N, 1]), dtype=np.float32)
+        self.reward_space = Box(low=np.zeros(3), high=np.array([N.sum(), N.sum(), 1]), dtype=np.float32)
 
     def reset(self):
         self.model.current_model_state = self.model.init_model_state
