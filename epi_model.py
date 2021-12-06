@@ -56,12 +56,14 @@ class Parameters:
         self.delta3 = delta3
 
 class AgeParameters:
-    def __init__(self, k, p, omega, phi0, phi1):
+    def __init__(self, k, p, omega, phi0, phi1, mu1, mu2):
         self.k = k
         self.p = p
         self.omega = omega
         self.phi0 = phi0
         self.phi1 = phi1
+        self.mu1 = mu1
+        self.mu2 = mu2
 
     def psi(self, p):
         delta_2_star = p.delta2 / self.phi0
