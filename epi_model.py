@@ -1,3 +1,32 @@
+def read_parameters_from_csv(self, file, row=-1):
+    df = pd.read_csv(file)
+    df = df.iloc[row]
+    p_vec = [0.94,0.90,0.84,0.61,0.49,0.21,0.02,0.02,0.02,0.02]
+    
+    self.ap = []
+    self.p = []
+    
+    # model parameters
+    self.p.append(Parameters([[1, 1], [1, 1]], df['log_gamma'],
+                             df['log_theta'], df['log_delta1'], 
+                             df['log_delta2'], df['log_delta3']))
+    
+    # age parameters
+    for k in range(self.K):
+        if k < 3:
+            self.ap.append(AgeParameters(k, p_vec[k],
+                                         df['log_omega_age' + str(k+1)],
+                                         df['log_phi0_age' + str(k+1)], 
+                                         df['log_phi1_age' + str(k+1)], 0, 0))
+            
+            else:
+                self.ap.append(AgeParameters(k, [],
+                                             df['log_omega_age' + str(k+1)],
+                                             df['log_phi0_age' + str(k+1)], 
+                                             df['log_phi1_age' + str(k+1)],
+                                             df['log_mu_sev_age' + str(k+1)],
+                                             df['log_mu2_sev_age' + str(k+1)]))
+
 def lambda_(k, C_asym, C_sym, state):
     l_ = 0.0
     for k_prime in range(K):
@@ -26,23 +55,20 @@ def I_asym(k):
 def I_mild(k):
     return (n_com*k) + 4
 
-def I_mild(k):
+def I_sev(k):
     return (n_com*k) + 5
 
-def I_sev(k):
+def I_hosp(k):
     return (n_com*k) + 6
 
-def I_hosp(k):
+def I_icu(k):
     return (n_com*k) + 7
 
-def I_icu(k):
+def R(k):
     return (n_com*k) + 8
 
-def R(k):
-    return (n_com*k) + 9
-
 def D(k):
-    return (n_com*k) + 10
+    return (n_com*k) + 9
 
 class Parameters:
     def __init__(self, q, gamma, theta,
