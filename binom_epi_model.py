@@ -20,7 +20,7 @@ class BinomialEpiModel:
         return binom.rvs(n, 1 - np.exp(rate))[0]
 
     def age_step(self, k, C_asym, C_sym, a_p, p):
-        E_n = next(s[S(k)], 1 - np.exp(-h*lambda_(k,state)))
+        E_n = next(s[S(k)], -h*lambda_(k,state))
         I_presym_n = next(s[E(k)], -h*p.gamma)
         I_asym_n = next(s[I_presym(k)], -h * a_p[k].p * p.theta)
         I_mild_n = next(s[I_presym(k)], -h * (1-a_p[k].p) * p.theta)
