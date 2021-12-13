@@ -67,7 +67,7 @@ class EpiEnv(gym.Env):
             R_s_n = s_n[self.model.R(np.arange(self.model.K))]
             # all combinations of age groups
             i, j = np.meshgrid(range(self.model.K), range(self.model.K))
-            r_sr += (C_diff*S_s_n[i]*S_s_n[j] + C_diff*R_s_n[i]*R_s_n[j]).sum()
+            r_sr += (C_asym*S_s_n[i]*S_s_n[j] + C_asym*R_s_n[i]*R_s_n[j]).sum()
             # update state
             s = s_n
 
