@@ -3,22 +3,28 @@ import gym
 from gym.spaces import Box
 
 
-def reduce(c, p):
-    # p contains p_w, p_s, p_l
-    # TODO reduce contacts
-    return c
+def gradual_compliance_weights(t, beta_0, beta_1):
+    x = beta_0 + beta_1*t
+    w1 = np.minimum(1, np.exp(x)/(1+np.exp(x)))
+    w0 = 1-w1
+    return w0, w1
 
 
 class EpiEnv(gym.Env):
 
-    def __init__(self, model):
+    def __init__(self, model, C=None):
         super(EpiEnv, self).__init__()
         # under the hood we run this epi model
         self.model = model
         # population size of each age-group is sum of the compartments
         N = self.model.init_model_state.reshape((self.model.K, self.model.n_comp)).sum(1).repeat(self.model.n_comp)
         # contact matrix
-        self.C = np.array([[18, 9], [3, 12]]) #np.ones((model.K, model.K))
+        self.C = np.ones((1, model.K, model.K)) if C is None else C
+        # factors of contact matrix for symptomatic people, reshape to match C shape
+        self.C_sym_factor = np.array([1., 0.09, 0.13, 0.09, 0.06, 0.25])[None, None]
+        # params for gradual compliance TODO load from config file
+        self.beta_0 = -5
+        self.beta_1 = 1.404
 
         # the observation space are compartments x age_groups
         self.observation_space = Box(low=np.zeros(model.n_comp*model.K), high=N, dtype=np.float32)
@@ -33,17 +39,24 @@ class EpiEnv(gym.Env):
 
     def step(self, action):
         # action is a 3d continuous vector
-        # TODO reduction does not happen at once?
-        C = reduce(self.C, action)
+        p_w, p_s, p_l = action
+        # match all C components, reshape to match C shape
+        p = np.array([1, p_w, p_w, p_s, p_l, p_l])[None, None]
+        C_target = self.C*p
 
         s = self.model.current_model_state
 
         # simulate for a whole week, sum the daily rewards
         r_ari = r_arh = r_sr = 0.
         # make sure we only take upper diagonal
-        C_diff = np.triu(C-self.C)
-        for _ in range(7):
-            s_n = self.model.simulate_day(C)
+        for t in range(7):
+            # gradual compliance, C_target is only reached after a number of days
+            w0, w1 = gradual_compliance_weights(t, self.beta_0, self.beta_1)
+            C = self.C*w0 + C_target*w1
+            C_asym = C.sum(axis=0)
+            C_sym = (C*self.C_sym_factor).sum(axis=0)
+            # TODO the ODE should support C_asym and C_sym
+            s_n = self.model.simulate_day(C_sym, C_asym)
             # attack rate infected
             S_s = s[self.model.S(np.arange(self.model.K))]
             S_s_n = s_n[self.model.S(np.arange(self.model.K))]
@@ -58,7 +71,5 @@ class EpiEnv(gym.Env):
             # update state
             s = s_n
 
-        # TODO do I need to manually set the state to the new state in the epi model?
-        self.C = C
         # next-state, reward, terminal?, info
         return s_n, np.array([r_ari, r_arh, r_sr]), False, {}

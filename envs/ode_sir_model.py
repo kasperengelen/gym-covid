@@ -13,7 +13,7 @@ class OdeEpiModel:
     #running parts of a trajectory (for value iteration methods)
     #?
     
-    def __init__(self, K, init_model_state, beta, gamma):
+    def __init__(self, N, K, init_model_state, beta, gamma):
         #age groups
         self.K = K        
         #initial model state
@@ -23,7 +23,7 @@ class OdeEpiModel:
         #parameters
         self.beta = beta
         self.gamma = gamma
-        self.N = [75, 25]
+        self.N = N
         self.n_comp = 3
 
     #number of compartments in each age groups

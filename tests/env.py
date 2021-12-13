@@ -24,8 +24,8 @@ if __name__ == '__main__':
     from gym.wrappers import TimeLimit
     import numpy as np
     
-    env = gym.make('EpiODEContinuous-v0')
-    env = TimeLimit(env, 48)
+    env = gym.make('EpiBelgiumODEContinuous-v0')
+    env = TimeLimit(env, 250//7)
     states = []
     s = env.reset()
     d = False
@@ -37,4 +37,5 @@ if __name__ == '__main__':
         states.append(s)
     
     states = np.array(states)
+    # plots assume 3 compartments
     plot_simulation(states)
