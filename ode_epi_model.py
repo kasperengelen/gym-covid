@@ -1,5 +1,6 @@
 #init and simulate_day are the interface of EpiModel, we will have a BiomialEpiModel as well, 
 # that implements this same interface
+# Commit
 
 from scipy.integrate import odeint
 from wrappers.epi_model import Parameters
