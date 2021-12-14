@@ -21,7 +21,7 @@ class EpiEnv(gym.Env):
         # contact matrix
         self.C = np.ones((1, model.K, model.K)) if C is None else C
         # factors of contact matrix for symptomatic people, reshape to match C shape
-        self.C_sym_factor = np.array([1., 0.09, 0.13, 0.09, 0.06, 0.25])[None, None]
+        self.C_sym_factor = np.array([1., 0.09, 0.13, 0.09, 0.06, 0.25])[:, None, None]
         # params for gradual compliance TODO load from config file
         self.beta_0 = -5
         self.beta_1 = 1.404
@@ -41,7 +41,7 @@ class EpiEnv(gym.Env):
         # action is a 3d continuous vector
         p_w, p_s, p_l = action
         # match all C components, reshape to match C shape
-        p = np.array([1, p_w, p_w, p_s, p_l, p_l])[None, None]
+        p = np.array([1, p_w, p_w, p_s, p_l, p_l])[:, None, None]
         C_target = self.C*p
 
         s = self.model.current_model_state
