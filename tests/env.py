@@ -30,6 +30,7 @@ if __name__ == '__main__':
     s = env.reset()
     d = False
     states.append(s)
+    print("initial state", s)
     while not d:
         a = env.action_space.sample()
         s, r, d, _ = env.step(a)

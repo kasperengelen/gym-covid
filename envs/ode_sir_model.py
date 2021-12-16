@@ -5,7 +5,7 @@ from scipy.integrate import odeint
 import numpy as np
 
 
-class OdeEpiModel:
+class OdeSIREpiModel:
     #having a actor that allows initation from a particular state,
     #and a function to forward simulate a day, should allow us
     #to do everything we want,

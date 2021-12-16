@@ -12,10 +12,11 @@ def gradual_compliance_weights(t, beta_0, beta_1):
 
 class EpiEnv(gym.Env):
 
-    def __init__(self, model, C=None):
+    def __init__(self, model, funcs, C=None):
         super(EpiEnv, self).__init__()
         # under the hood we run this epi model
         self.model = model
+        self.funcs = funcs
         # population size of each age-group is sum of the compartments
         N = self.model.init_model_state.reshape((self.model.K, self.model.n_comp)).sum(1).repeat(self.model.n_comp)
         # contact matrix
@@ -56,15 +57,15 @@ class EpiEnv(gym.Env):
             C_asym = C.sum(axis=0)
             C_sym = (C*self.C_sym_factor).sum(axis=0)
             # TODO the ODE should support C_asym and C_sym
-            s_n = self.model.simulate_day(C_sym, C_asym)
+            s_n = self.model.simulate_day(C_asym, C_sym)
             # attack rate infected
-            S_s = s[self.model.S(np.arange(self.model.K))]
-            S_s_n = s_n[self.model.S(np.arange(self.model.K))]
+            S_s = s[self.funcs.S(np.arange(self.model.K))]
+            S_s_n = s_n[self.funcs.S(np.arange(self.model.K))]
             r_ari += -(np.sum(S_s) - np.sum(S_s_n))
             # TODO attack rate hospitalization
             r_arh += 0.
             # reduction in social contact
-            R_s_n = s_n[self.model.R(np.arange(self.model.K))]
+            R_s_n = s_n[self.funcs.R(np.arange(self.model.K))]
             # all combinations of age groups
             i, j = np.meshgrid(range(self.model.K), range(self.model.K))
             r_sr += (C_asym*S_s_n[i]*S_s_n[j] + C_asym*R_s_n[i]*R_s_n[j]).sum()

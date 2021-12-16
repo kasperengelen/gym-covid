@@ -1,6 +1,8 @@
 from gym.envs.registration import register
 from envs.epi_env import EpiEnv
-from envs.ode_sir_model import OdeEpiModel
+from envs.ode_sir_model import OdeSIREpiModel
+from envs.ode_epi_model import OdeEpiModel
+from envs.epi_model import Model_Funcs
 import numpy as np
 import pandas as pd
 
@@ -44,6 +46,17 @@ def load_initial_state():
     initial_state = np.concatenate((S, E, I_R_D))
     return initial_state
 
+def epi_sir_belgium_ode():
+    C = load_c_be2010()
+    initial_state = load_initial_state()
+    population = initial_state[:10] + initial_state[10:20]
+    # TODO replace with our model
+    model = OdeSIREpiModel(population, 10, initial_state, 0.05, 1/3)
+    func_model = Model_Funcs()
+    env = EpiEnv(model, func_model, C=C)
+
+    return env
+
 
 def epi_belgium_ode():
     C = load_c_be2010()
@@ -51,7 +64,9 @@ def epi_belgium_ode():
     population = initial_state[:10] + initial_state[10:20]
     # TODO replace with our model
     model = OdeEpiModel(population, 10, initial_state, 0.05, 1/3)
-    env = EpiEnv(model, C=C)
+    func_model = Model_Funcs()
+    env = EpiEnv(model, func_model, C=C)
+
     return env
 
 
@@ -59,9 +74,10 @@ def epi_ode():
     # run for `steps` weeks
     # model with 2 age groups
     model = OdeEpiModel(np.array([2.5e6, 7.5e6]), 2, np.array([2.5e6-1, 1, 0., 7.5e6-1, 1, 0]), 0.05, 1/3)
+    func_model = Model_Funcs()
     # contact matrix
     C = np.array([[18, 6], [3, 12]])
-    env = EpiEnv(model, C=C[None])
+    env = EpiEnv(model, func_model, C=C[None])
     return env
 
 
@@ -72,6 +88,12 @@ register(
     )
 
 register(
+    id='EpiBelgiumODESIRContinuous-v0',
+    entry_point='envs:epi_sir_belgium_ode',
+    )
+
+register(
     id='EpiBelgiumODEContinuous-v0',
     entry_point='envs:epi_belgium_ode',
     )
+
