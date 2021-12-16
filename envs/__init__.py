@@ -2,7 +2,7 @@ from gym.envs.registration import register
 from envs.epi_env import EpiEnv
 from envs.ode_sir_model import OdeSIREpiModel
 from envs.ode_epi_model import OdeEpiModel
-from envs.epi_model import Model_Funcs
+from envs.epi_model import __funcs__
 import numpy as np
 import pandas as pd
 
@@ -52,8 +52,7 @@ def epi_sir_belgium_ode():
     population = initial_state[:10] + initial_state[10:20]
     # TODO replace with our model
     model = OdeSIREpiModel(population, 10, initial_state, 0.05, 1/3)
-    func_model = Model_Funcs()
-    env = EpiEnv(model, func_model, C=C)
+    env = EpiEnv(model, __funcs__(), C=C)
 
     return env
 
@@ -64,8 +63,7 @@ def epi_belgium_ode():
     population = initial_state[:10] + initial_state[10:20]
     # TODO replace with our model
     model = OdeEpiModel(population, 10, initial_state, 0.05, 1/3)
-    func_model = Model_Funcs()
-    env = EpiEnv(model, func_model, C=C)
+    env = EpiEnv(model, __funcs__(), C=C)
 
     return env
 
@@ -74,10 +72,9 @@ def epi_ode():
     # run for `steps` weeks
     # model with 2 age groups
     model = OdeEpiModel(np.array([2.5e6, 7.5e6]), 2, np.array([2.5e6-1, 1, 0., 7.5e6-1, 1, 0]), 0.05, 1/3)
-    func_model = Model_Funcs()
     # contact matrix
     C = np.array([[18, 6], [3, 12]])
-    env = EpiEnv(model, func_model, C=C[None])
+    env = EpiEnv(model, __funcs__(), C=C[None])
     return env
 
 

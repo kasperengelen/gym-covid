@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-class Model_Funcs():
+class __funcs__():
 
     def __init__(self, n_comp=0, K=0):
         self.n_comp = n_comp
