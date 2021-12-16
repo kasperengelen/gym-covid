@@ -9,7 +9,7 @@ import pandas as pd
 
 def load_c_be2010():
     contact_types = ['home', 'work', 'transport', 'school', 'leisure', 'otherplace']
-    c = [pd.read_csv(f'data/contact_matrix/c_{ct}.csv').values for ct in contact_types]
+    c = [pd.read_csv(f'data/contact_matrix/socrates/c_{ct}.csv').values for ct in contact_types]
     c = np.array(c)
     return c
 
