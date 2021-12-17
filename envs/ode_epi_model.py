@@ -4,7 +4,7 @@
 from scipy.integrate import odeint, solve_ivp
 from envs.epi_model import Parameters
 from envs.epi_model import AgeParameters
-from envs.epi_model import Model_Funcs
+from envs.epi_model import __funcs__
 import numpy as np
 import pandas as pd
 import sys
@@ -27,13 +27,14 @@ class OdeEpiModel:
         self.gamma = gamma
         self.N = N
         self.n_comp = 10
-        self.mf = Model_Funcs(self.n_comp, self.K)
-        self.p, self.ap = self.mf.read_parameters_from_csv('https://raw.githubusercontent.com/lwillem/stochastic_model_BE/main/data/config/MCMCmulti_20211123_wave1.csv?token=AI4WOQFDQCWTZGFKPRPKQ2DBYJPXW')
+        self.mf = __funcs__(self.n_comp, self.K)
+        self.p, self.ap = self.mf.init_params()
 
     def simulate_day(self, C_asym, C_sym):
 
         def deriv(y, t):
-            d_ = np.empty([(self.n_comp * (self.K))])
+            d_ = np.zeros([(self.n_comp * (self.K))])
+            print(t)
 
             for k in range(self.K):
 
@@ -47,20 +48,19 @@ class OdeEpiModel:
 
                 d_[self.mf.I_asym(k)] = self.p.theta * self.ap[k].p * y[self.mf.I_presym(k)] - self.p.delta1 * y[self.mf.I_asym(k)]
 
-                d_[self.mf.I_mild(k)] = self.p.theta * (1 - self.ap[k].p) * y[self.mf.I_presym(k)] - (self.ap[k].psi(self.p) + self.p.delta2) * y[self.mf.I_mild(k)]
+                d_[self.mf.I_mild(k)] = self.p.theta * (1 - self.ap[k].p) * y[self.mf.I_presym(k)] - (self.ap[k].psi(self.p) + self.ap[k].delta2) * y[self.mf.I_mild(k)]
 
                 d_[self.mf.I_sev(k)] = self.ap[k].psi(self.p) * y[self.mf.I_mild(k)] - self.ap[k].omega * y[self.mf.I_sev(k)]
 
-                d_[self.mf.I_hosp(k)] = self.ap[k].phi1 * self.ap[k].omega * y[self.mf.I_sev(k)] - (self.p.delta3 + self.ap[k].mu1) * y[self.mf.I_hosp(k)]
+                d_[self.mf.I_hosp(k)] = self.ap[k].phi1 * self.ap[k].omega * y[self.mf.I_sev(k)] - (self.ap[k].delta3 + self.ap[k].mu1) * y[self.mf.I_hosp(k)]
 
-                d_[self.mf.I_icu(k)] = (1 - self.ap[k].phi1) * self.ap[k].omega * y[self.mf.I_sev(k)] - (self.p.delta3 + self.ap[k].mu2) * y[self.mf.I_icu(k)]
+                d_[self.mf.I_icu(k)] = (1 - self.ap[k].phi1) * self.ap[k].omega * y[self.mf.I_sev(k)] - (self.ap[k].delta3 + self.ap[k].tau1) * y[self.mf.I_icu(k)]
 
-                d_[self.mf.D(k)] = self.ap[k].mu1 * y[self.mf.I_hosp(k)] + self.ap[k].mu2 * y[self.mf.I_icu(k)] 
+                d_[self.mf.D(k)] = self.ap[k].tau1 * y[self.mf.I_hosp(k)] + self.ap[k].tau1 * y[self.mf.I_icu(k)] 
 
-                d_[self.mf.R(k)] = self.p.delta1 * y[self.mf.I_asym(k)] + self.p.delta2 * y[self.mf.I_mild(k)
-                ] + self.p.delta3 * y[self.mf.I_hosp(k)] + self.p.delta3 * y[self.mf.I_icu(k)]
+                d_[self.mf.R(k)] = self.p.delta1 * y[self.mf.I_asym(k)] + self.ap[k].delta2 * y[self.mf.I_mild(k)
+                ] + self.ap[k].delta3 * y[self.mf.I_hosp(k)] + self.ap[k].delta3 * y[self.mf.I_icu(k)]
 
-            #print(d_)
             return d_
 
         # Initial conditions vector
@@ -68,12 +68,9 @@ class OdeEpiModel:
 
         # Integrate the SIR equations over the time grid, t.        
         # time for each hour of the day - needs to be defined        
-        t = np.linspace(0,23,24)
+        t = np.linspace(0,1,3)
         ret = odeint(deriv, y0, t)
-        #ret = solve_ivp(deriv, t, y0)
-        #print(ret)
-       
-        
+
         # state will be the last time period
         self.current_model_state = ret[-1].T
 

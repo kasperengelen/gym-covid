@@ -15,6 +15,8 @@ def load_c_be2010():
 
 
 def load_initial_state():
+    n_comp = 10
+    funcs = __funcs__()
     population = pd.read_csv('data/population_2020-01-01.csv')
     # sort by age, keep only age and population count (2 last columns)
     population = population.sort_values(by=['Leeftijd']).iloc[:,-2:].values
@@ -40,10 +42,20 @@ def load_initial_state():
     n0 = np.exp(7.75220356739557)
     imported_cases = np.round(rel_age_cases.values.flatten()*n0*(1/(1-p_vec)),0)
     S = population_groups-imported_cases
+
     E = imported_cases
     # I_presym, I_asym, I_mild, I_sev, I_hosp, I_icu, R, D
     I_R_D = np.zeros(8*(len(age_groups)-1))
     initial_state = np.concatenate((S, E, I_R_D))
+    initial_state = np.zeros(n_comp * len(population_groups))
+    for i in range(len(population_groups)):
+        #print(i ,funcs.S(i), S[i])
+        #print(i, funcs.E(i), E[i])
+        initial_state[funcs.S(i)] = S[i]
+        initial_state[funcs.E(i)] = E[i]
+
+    #print(initial_state)
+
     return initial_state
 
 def epi_sir_belgium_ode():

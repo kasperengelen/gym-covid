@@ -50,7 +50,7 @@ class EpiEnv(gym.Env):
         # simulate for a whole week, sum the daily rewards
         r_ari = r_arh = r_sr = 0.
         # make sure we only take upper diagonal
-        for t in range(7):
+        for t in range(5):
             # gradual compliance, C_target is only reached after a number of days
             w0, w1 = gradual_compliance_weights(t, self.beta_0, self.beta_1)
             C = self.C*w0 + C_target*w1

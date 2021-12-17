@@ -8,10 +8,19 @@ def plot_simulation(states):
     for ag in range(2):
         ax = axs[ag]
         s, i, r = states[:, ag*3+0], states[:, ag*3+1], states[:, ag*3+2]
+        # lst[0::10]
+        
+        s, e = [sum(state[0::10]) for state in states], [sum(state[1::11]) for state in states]
+        i_presym, i_asym =  [sum(state[2::12]) for state in states], [sum(state[3::13]) for state in states]
+        i_mild, i_sev = [sum(state[4::14]) for state in states], [sum(state[5::15]) for state in states]
+        i_hosp, i_icu = [sum(state[6::16]) for state in states], [sum(state[7::17]) for state in states]
+        d, r = [sum(state[8::18]) for state in states], [sum(state[9::19]) for state in states]
 
+
+        print(s)
         ax.plot(s, c='b', label='s')
-        ax.plot(i, c='r', label='i')
-        ax.plot(r, c='g', label='r')
+        ax.plot(i_hosp, c='r', label='i_hosp')
+        #ax.plot(r, c='g', label='r')
         ax.set_xlabel('week')
         ax.set_ylabel('pop')
         ax.legend()
@@ -38,5 +47,6 @@ if __name__ == '__main__':
         states.append(s)
     
     states = np.array(states)
+    print(len(states))
     # plots assume 3 compartments
     plot_simulation(states)
