@@ -46,6 +46,9 @@ class EpiEnv(gym.Env):
     #change the contact matrix, and simulate 1 week,
     #over which the matrix is gradually applied
     def install_contact_matrix(p_w, p_s, p_l):
+        #TODO: when doing RL, we should check here whether the contact matrix
+        #      actually changed, if not no gradual compliance should be applied
+        
         # match all C components, reshape to match C shape
         p = np.array([1, p_w, p_w, p_s, p_l, p_l])[:, None, None]
         C_target = self.C*p
