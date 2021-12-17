@@ -41,6 +41,11 @@ class EpiEnv(gym.Env):
     def step(self, action):
         # action is a 3d continuous vector
         p_w, p_s, p_l = action
+        return install_contact_matrix(p_w, p_s, p_l)
+
+    #change the contact matrix, and simulate 1 week,
+    #over which the matrix is gradually applied
+    def install_contact_matrix(p_w, p_s, p_l):
         # match all C components, reshape to match C shape
         p = np.array([1, p_w, p_w, p_s, p_l, p_l])[:, None, None]
         C_target = self.C*p
