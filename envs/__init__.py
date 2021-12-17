@@ -8,8 +8,15 @@ import pandas as pd
 
 
 def load_c_be2010():
+    def process_contact_csv(ct):
+        c = pd.read_csv(f'data/contact_matrix/original/c_{ct}.csv', header=None).values
+        #copy the 90+ age group from the 80-90 age group (col and row)
+        c = np.hstack((c, np.tile(c[:, [-1]], 1)))
+        c = np.vstack((c, np.tile(c[-1], 1)))
+        return c
+        
     contact_types = ['home', 'work', 'transport', 'school', 'leisure', 'otherplace']
-    c = [pd.read_csv(f'data/contact_matrix/socrates/c_{ct}.csv').values for ct in contact_types]
+    c = [process_contact_csv(ct) for ct in contact_types]
     c = np.array(c)
     return c
 
