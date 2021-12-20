@@ -34,7 +34,6 @@ class OdeEpiModel:
 
         def deriv(y, t):
             d_ = np.zeros([(self.n_comp * (self.K))])
-            print(t)
 
             for k in range(self.K):
 
@@ -52,7 +51,7 @@ class OdeEpiModel:
 
                 d_[self.mf.I_sev(k)] = self.ap[k].psi(self.p) * y[self.mf.I_mild(k)] - self.ap[k].omega * y[self.mf.I_sev(k)]
 
-                d_[self.mf.I_hosp(k)] = self.ap[k].phi1 * self.ap[k].omega * y[self.mf.I_sev(k)] - (self.ap[k].delta3 + self.ap[k].mu1) * y[self.mf.I_hosp(k)]
+                d_[self.mf.I_hosp(k)] = self.ap[k].phi1 * self.ap[k].omega * y[self.mf.I_sev(k)] - (self.ap[k].delta3 + self.ap[k].tau1) * y[self.mf.I_hosp(k)]
 
                 d_[self.mf.I_icu(k)] = (1 - self.ap[k].phi1) * self.ap[k].omega * y[self.mf.I_sev(k)] - (self.ap[k].delta3 + self.ap[k].tau1) * y[self.mf.I_icu(k)]
 
@@ -68,7 +67,7 @@ class OdeEpiModel:
 
         # Integrate the SIR equations over the time grid, t.        
         # time for each hour of the day - needs to be defined        
-        t = np.linspace(0,1,3)
+        t = np.array([0, 1])
         ret = odeint(deriv, y0, t)
 
         # state will be the last time period
