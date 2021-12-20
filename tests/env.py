@@ -39,7 +39,13 @@ def plot_i_hosp(states):
 
     plt.figure()
     i_hosp = states[:,6::10].sum(axis=1)
-    plt.plot(i_hosp)
+    i_icu = states[:,7::10].sum(axis=1)
+    d = states[:,9::10].sum(axis=1)
+    plt.plot(i_hosp, label='hosp')
+    plt.plot(i_icu, label='icu')
+    plt.plot(i_hosp+i_icu, label='hosp+icu')
+    plt.plot(d, label='deaths')
+    plt.legend()
     plt.xlabel('day')
     plt.ylabel('n hosp')
     plt.show()
@@ -64,7 +70,6 @@ if __name__ == '__main__':
         s, r, d, _ = env.step(a)
         # print(s, r)
         states.append(s)
-        i += 1
     
     states = np.array(states)
     # plots assume 3 compartments
