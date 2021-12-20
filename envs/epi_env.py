@@ -41,11 +41,11 @@ class EpiEnv(gym.Env):
     def step(self, action):
         # action is a 3d continuous vector
         p_w, p_s, p_l = action
-        return install_contact_matrix(p_w, p_s, p_l)
+        return self.install_contact_matrix(p_w, p_s, p_l)
 
     #change the contact matrix, and simulate 1 week,
     #over which the matrix is gradually applied
-    def install_contact_matrix(p_w, p_s, p_l):
+    def install_contact_matrix(self, p_w, p_s, p_l):
         #TODO: when doing RL, we should check here whether the contact matrix
         #      actually changed, if not no gradual compliance should be applied
         
@@ -58,7 +58,7 @@ class EpiEnv(gym.Env):
         # simulate for a whole week, sum the daily rewards
         r_ari = r_arh = r_sr = 0.
         # make sure we only take upper diagonal
-        for t in range(5):
+        for t in range(7):
             # gradual compliance, C_target is only reached after a number of days
             w0, w1 = gradual_compliance_weights(t, self.beta_0, self.beta_1)
             C = self.C*w0 + C_target*w1
