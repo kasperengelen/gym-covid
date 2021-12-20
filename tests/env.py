@@ -26,6 +26,15 @@ def plot_simulation(states):
         ax.legend()
     plt.show()
 
+def plot_i_hosp(states):
+
+    plt.figure()
+    i_hosp = states[:,6::10].sum(axis=1)
+    plt.plot(i_hosp)
+    plt.xlabel('day')
+    plt.ylabel('n hosp')
+    plt.show()
+
 
 if __name__ == '__main__':
     import gym
@@ -34,19 +43,21 @@ if __name__ == '__main__':
     import numpy as np
     
     env = gym.make('EpiBelgiumODEContinuous-v0')
-    env = TimeLimit(env, 250//7)
+    env = TimeLimit(env, 60)
     states = []
     s = env.reset()
     d = False
     states.append(s)
     print("initial state", s)
     while not d:
-        a = env.action_space.sample()
+        # action doesnt matter, hardcoded in MDP
+        a = np.ones(3)
         s, r, d, _ = env.step(a)
-        print(s, r)
+        # print(s, r)
         states.append(s)
     
     states = np.array(states)
     print(len(states))
     # plots assume 3 compartments
-    plot_simulation(states)
+    # plot_simulation(states)
+    plot_i_hosp(states)

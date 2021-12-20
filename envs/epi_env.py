@@ -36,18 +36,16 @@ class EpiEnv(gym.Env):
 
     def reset(self):
         self.model.current_model_state = self.model.init_model_state
+        self.tstep=1; self.lockdown = 14
         return self.model.current_model_state
 
     def step(self, action):
         # action is a 3d continuous vector
         p_w, p_s, p_l = action
-        return install_contact_matrix(p_w, p_s, p_l)
-
-    #change the contact matrix, and simulate 1 week,
-    #over which the matrix is gradually applied
-    def install_contact_matrix(p_w, p_s, p_l):
-        #TODO: when doing RL, we should check here whether the contact matrix
-        #      actually changed, if not no gradual compliance should be applied
+        if self.tstep >= self.lockdown:
+            p_w, p_s, p_l = 0.2, 0.0, 0.1
+        else:
+            p_w = p_s= p_l = 1
         
         # match all C components, reshape to match C shape
         p = np.array([1, p_w, p_w, p_s, p_l, p_l])[:, None, None]
@@ -58,9 +56,11 @@ class EpiEnv(gym.Env):
         # simulate for a whole week, sum the daily rewards
         r_ari = r_arh = r_sr = 0.
         # make sure we only take upper diagonal
-        for t in range(5):
+        for t in range(1):
             # gradual compliance, C_target is only reached after a number of days
-            w0, w1 = gradual_compliance_weights(t, self.beta_0, self.beta_1)
+            w0, w1 = gradual_compliance_weights(self.tstep-self.lockdown, self.beta_0, self.beta_1)
+            if self.tstep < self.lockdown:
+                w0, w1 = 1, 0
             C = self.C*w0 + C_target*w1
             C_asym = C.sum(axis=0)
             C_sym = (C*self.C_sym_factor).sum(axis=0)
@@ -79,6 +79,7 @@ class EpiEnv(gym.Env):
             r_sr += (C_asym*S_s_n[i]*S_s_n[j] + C_asym*R_s_n[i]*R_s_n[j]).sum()
             # update state
             s = s_n
+            self.tstep+=1
 
         # next-state, reward, terminal?, info
         return s_n, np.array([r_ari, r_arh, r_sr]), False, {}
