@@ -67,7 +67,7 @@ class OdeEpiModel:
 
         # Integrate the SIR equations over the time grid, t.        
         # time for each hour of the day - needs to be defined        
-        t = np.linspace(0,1,1000)
+        t = np.linspace(0,1,3)
         ret = odeint(deriv, y0, t)
 
         # state will be the last time period

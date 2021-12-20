@@ -6,10 +6,13 @@ import matplotlib.pyplot as plt
 def plot_simulation(states):
     #fig, axs = plt.subplots(2, 1)
 
-    #i_hosp = states[:, 6::10].sum(axis=1)
-    
+    i_hosp = states[:, 6::10].sum(axis=1)
+    plt.plot(i_hosp)
+    plt.xlabel("weeks")
+    plt.ylabel("n hosp")
+    print(len(states))
 
-    
+    """
     for ag in range(2):
         ax = axs[ag]
         s, i, r = states[:, ag*3+0], states[:, ag*3+1], states[:, ag*3+2]
@@ -29,7 +32,7 @@ def plot_simulation(states):
         ax.set_xlabel('week')
         ax.set_ylabel('pop')
         ax.legend()
-    
+    """
     plt.show()
 
 
