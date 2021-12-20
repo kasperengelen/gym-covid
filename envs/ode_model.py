@@ -149,9 +149,7 @@ if __name__ == '__main__':
             w0, w1 = 1, 0
         else:
             p_w, p_s, p_l = 0.2, 0.0, 0.1
-            w0, w1 = 0, 1
             w0, w1 = gradual_compliance_weights(day-start_lockdown, beta_0, beta_1)
-            print(w0, w1)
             
         C_sym_factor = np.array([1., 0.09, 0.13, 0.09, 0.06, 0.25])[:, None, None]
         p = np.array([1, p_w, p_w, p_s, p_l, p_l])[:, None, None]
