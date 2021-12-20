@@ -1,5 +1,6 @@
 from gym.envs.registration import register
 from envs.epi_env import EpiEnv
+from envs.binom_epi_model import BinomialEpiModel
 from envs.ode_sir_model import OdeSIREpiModel
 from envs.ode_epi_model import OdeEpiModel
 from envs.epi_model import __funcs__
@@ -78,6 +79,16 @@ def epi_belgium_ode():
 
     return env
 
+def epi_belgium_binom():
+    C = load_c_be2010()
+    initial_state = load_initial_state()
+    population = initial_state[:10] + initial_state[10:20]
+    # TODO replace with our model
+    model = BinomialEpiModel(10, 10, initial_state)
+    env = EpiEnv(model, __funcs__(), C=C)
+
+    return env
+
 
 def epi_ode():
     # run for `steps` weeks
@@ -103,5 +114,10 @@ register(
 register(
     id='EpiBelgiumODEContinuous-v0',
     entry_point='envs:epi_belgium_ode',
+    )
+
+register(
+    id='EpiBelgiumBinomialContinuous-v0',
+    entry_point='envs:epi_belgium_binom',
     )
 

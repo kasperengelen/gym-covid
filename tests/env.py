@@ -57,7 +57,12 @@ if __name__ == '__main__':
     from gym.wrappers import TimeLimit
     import numpy as np
     
-    env = gym.make('EpiBelgiumODEContinuous-v0')
+    # load ode model
+    #env = gym.make('EpiBelgiumODEContinuous-v0')
+
+    # load binomial model
+    env = gym.make('EpiBelgiumBinomialContinuous-v0')
+
     env = TimeLimit(env, 60)
     states = []
     s = env.reset()
@@ -68,7 +73,7 @@ if __name__ == '__main__':
         # action doesnt matter, hardcoded in MDP
         a = np.ones(3)
         s, r, d, _ = env.step(a)
-        # print(s, r)
+        print(s, r)
         states.append(s)
     
     states = np.array(states)

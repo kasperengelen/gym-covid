@@ -1,63 +1,77 @@
 import numpy as np
 from scipy.stats import binom
 
-from epi_model import *
+from envs.epi_model import *
+from envs.epi_model import __funcs__
+import math
 
 class BinomialEpiModel:
-    #TODO: let's assume that init_model_state is a numpy array
-    def __init__(self, K, init_model_state, parameters, age_parameters):
+
+    def __init__(self, K, n_comp, init_model_state):
         #age groups
         self.K = K
+        self.n_comp = n_comp
         self.init_model_state = init_model_state
-        self.current_model_state = init_model_state
-        self.parameters = parameters
-        self.age_parameters = age_parameters
+        self.current_model_state = init_model_state        
+
+        self.mf = __funcs__()
+        self.p, self.ap = self.mf.init_params()
 
         #TODO:hacky
-        self.new = np.zeros(self.K * epi.n_comp)
+        #self.n = np.zeros(self.K * self.n_comp)
+        self.n = self.init_model_state
 
-    def next(n, rate):
-        return binom.rvs(n, 1 - np.exp(rate))[0]
 
-    def age_step(self, k, C_asym, C_sym, a_p, p):
-        E_n = next(s[S(k)], -h*lambda_(k,state))
-        I_presym_n = next(s[E(k)], -h*p.gamma)
-        I_asym_n = next(s[I_presym(k)], -h * a_p[k].p * p.theta)
-        I_mild_n = next(s[I_presym(k)], -h * (1-a_p[k].p) * p.theta)
-        I_sev_n = next(s[I_mild(k)], -h * a_p[k].psi(p))
-        I_hosp_n = next(s[I_sev(k)], -h * a_p[k].phi1 * a_p[k].omega)
-        I_icu_n = next(s[I_sev(k)], -h * (1-a_p[k].phi1) * a_p[k].omega)
-        D_hosp_n = next(s[I_hosp(k)], -h * a_p[k].mu1)
-        D_icu_n = next(s[I_icu(k)], -h * a_p[k].mu2)
-        R_asym_n = next(s[I_asym(k)], -h * a_p[k].delta1)
-        R_mild_n = next(s[I_mild(k)], -h * a_p[k].delta2)
-        R_hosp_n = next(s[I_hosp(k)], -h * a_p[k].delta3)
-        R_icu_n = next(s[I_icu(k)], -h * a_p[k].delta3)
+    def next(self, n, rate):
+        #print(int(n), rate)
+        #print(binom.rvs(int(n), 1 - np.exp(rate)))
 
-        n = self.n
-        n[S(k)] = s[S(k)] - E_n
-        n[E(k)] = s[E(k)] + E_n - I_presym_n
-        n[I_presym(k)] = s[I_presym(k)] + I_presym_n - I_asym_n - I_mild_n
-        n[I_asym(k)] = s[I_asym(k)] + I_asym_n - R_asym_n
-        n[I_mild(k)] = s[I_mild(k)] + I_mild_n - I_sev_n - R_mild_n
-        n[I_sev(k)] = s[I_sev(k)] + I_sev_n - I_hosp_n - R_sev_n
-        n[I_hosp(k)] = s[I_hosp(k)] + I_hosp_n - D_hosp_n - R_hosp_n
-        n[I_icu(k)] = s[I_icu(k)] + I_icu_n - D_icu_n - R_icu_n
-        n[D(k)] = s[D(k)] + D_hosp_n + D_icu_n
-        n[R(k)] = s[R(k)] + R_asym_n + R_mild_n + R_hosp_n + R_icu_n
+        ret = binom.rvs(int(n), 1 - np.exp(rate))
+        #print(ret)
+
+        return binom.rvs(int(n), 1 - np.exp(rate))
+
+    def age_step(self, k, C_asym, C_sym):
+        E_n = self.next(self.n[self.mf.S(k)], -self.h * self.mf.lambda_(k, C_asym, C_sym, self.n))
+        I_presym_n = self.next(self.n[self.mf.E(k)], -self.h * self.p.gamma)
+        I_asym_n = self.next(self.n[self.mf.I_presym(k)], -self.h * self.ap[k].p * self.p.theta)
+        I_mild_n = self.next(self.n[self.mf.I_presym(k)], -self.h * (1-self.ap[k].p) * self.p.theta)
+        I_sev_n = self.next(self.n[self.mf.I_mild(k)], -self.h * self.ap[k].psi(self.p))
+        I_hosp_n = self.next(self.n[self.mf.I_sev(k)], -self.h * self.ap[k].phi1 * self.ap[k].omega)
+        I_icu_n = self.next(self.n[self.mf.I_sev(k)], -self.h * (1-self.ap[k].phi1) * self.ap[k].omega)
+        D_hosp_n = self.next(self.n[self.mf.I_hosp(k)], -self.h * self.ap[k].mu1)
+        D_icu_n = self.next(self.n[self.mf.I_icu(k)], -self.h * self.ap[k].mu1)
+        R_asym_n = self.next(self.n[self.mf.I_asym(k)], -self.h * self.p.delta1)
+        R_mild_n = self.next(self.n[self.mf.I_mild(k)], -self.h * self.ap[k].delta2)
+        R_hosp_n = self.next(self.n[self.mf.I_hosp(k)], -self.h * self.ap[k].delta3)
+        R_icu_n = self.next(self.n[self.mf.I_icu(k)], -self.h * self.ap[k].delta3)
+
+        #n = self.n
+        #print(E_n)
+        self.n[self.mf.S(k)] = self.n[self.mf.S(k)] - E_n
+        self.n[self.mf.E(k)] = self.n[self.mf.E(k)] + E_n - I_presym_n
+        self.n[self.mf.I_presym(k)] = self.n[self.mf.I_presym(k)] + I_presym_n - I_asym_n - I_mild_n
+        self.n[self.mf.I_asym(k)] = self.n[self.mf.I_asym(k)] + I_asym_n - R_asym_n
+        self.n[self.mf.I_mild(k)] = self.n[self.mf.I_mild(k)] + I_mild_n - I_sev_n - R_mild_n
+        self.n[self.mf.I_sev(k)] = self.n[self.mf.I_sev(k)] + I_sev_n - I_hosp_n - I_icu_n
+        self.n[self.mf.I_hosp(k)] = self.n[self.mf.I_hosp(k)] + I_hosp_n - D_hosp_n - R_hosp_n
+        self.n[self.mf.I_icu(k)] = self.n[self.mf.I_icu(k)] + I_icu_n - D_icu_n - R_icu_n
+        self.n[self.mf.D(k)] = self.n[self.mf.D(k)] + D_hosp_n + D_icu_n
+        self.n[self.mf.R(k)] = self.n[self.mf.R(k)] + R_asym_n + R_mild_n + R_hosp_n + R_icu_n
+
+        return self.n
         
     #C_sym, C_asym -> contact matrices
     def simulate_day(self, C_asym, C_sym):
-        p = self.parameters
-        a_p = self.age_parameters
         
-        s = self.current_model_state
+        self.n = self.current_model_state
         for h in range(24):
-            for k in range(K):
-                age_step(k, C_asym, C_sym, a_p, p)
-            self.new = s
-            
-        return self.current_model_state
+            self.h = 1/24
+            for k in range(self.K):
+                self.n = self.age_step(k, C_asym, C_sym)
+            #self.new = s
+        self.current_model_state = self.n.copy()
+        return self.n
         
             
         
