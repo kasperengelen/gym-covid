@@ -59,6 +59,7 @@ class ODEModel(object):
         
 	#Table B1 (Appendix)
 	#last element was copied
+        #TODO: in Lander's code, the first 2 entries are 99
 	self.phi1 = np.array([100, 100, 85, 85, 76, 76, 73, 69, 74, 74])/100 # last element was missing, as group was [80,100)
        
 	#F.1 Appendix 
@@ -157,7 +158,6 @@ if __name__ == '__main__':
     # Age-dependent asymptomatic proportions
     ##Section B.2, Appendix (same as self.p)
     p_vec = np.array([0.94,0.90,0.84,0.61,0.49,0.21,0.02,0.02,0.02,0.02])
-    # param from model, TODO load from config file?
     #lijn 88 in lib_model_core.R
     n0 = np.exp(7.75220356739557)
     imported_cases = np.round(rel_age_cases.values.flatten()*n0*(1/(1-p_vec)),0)
