@@ -2,40 +2,10 @@ import sys
 import os
 sys.path.append(os.getcwd())
 import matplotlib.pyplot as plt
+import argparse
+
 
 def plot_simulation(states):
-    #fig, axs = plt.subplots(2, 1)
-
-    i_hosp = states[:, 6::10].sum(axis=1)
-    plt.plot(i_hosp)
-    plt.xlabel("weeks")
-    plt.ylabel("n hosp")
-    print(len(states))
-
-    """
-    for ag in range(2):
-        ax = axs[ag]
-        s, i, r = states[:, ag*3+0], states[:, ag*3+1], states[:, ag*3+2]
-        # lst[0::10]
-        
-        s, e = [sum(state[0::10]) for state in states], [sum(state[1::11]) for state in states]
-        i_presym, i_asym =  [sum(state[2::12]) for state in states], [sum(state[3::13]) for state in states]
-        i_mild, i_sev = [sum(state[4::14]) for state in states], [sum(state[5::15]) for state in states]
-        i_hosp, i_icu = [sum(state[6::16]) for state in states], [sum(state[7::17]) for state in states]
-        d, r = [sum(state[8::18]) for state in states], [sum(state[9::19]) for state in states]
-
-
-        print(s)
-        ax.plot(s, c='b', label='s')
-        ax.plot(i_hosp, c='r', label='i_hosp')
-        #ax.plot(r, c='g', label='r')
-        ax.set_xlabel('week')
-        ax.set_ylabel('pop')
-        ax.legend()
-    """
-    plt.show()
-
-def plot_i_hosp(states):
 
     plt.figure()
     i_hosp = states[:,6::10].sum(axis=1)
@@ -57,26 +27,51 @@ if __name__ == '__main__':
     from gym.wrappers import TimeLimit
     import numpy as np
     
-    # load ode model
-    #env = gym.make('EpiBelgiumODEContinuous-v0')
 
-    # load binomial model
-    env = gym.make('EpiBelgiumBinomialContinuous-v0')
-
-    env = TimeLimit(env, 60)
-    states = []
-    s = env.reset()
-    d = False
-    states.append(s)
-    print("initial state", s)
-    while not d:
-        # action doesnt matter, hardcoded in MDP
-        a = np.ones(3)
-        s, r, d, _ = env.step(a)
-        print(s, r)
-        states.append(s)
+    parser = argparse.ArgumentParser(description='')
+    #parser.add_argument('--algorithm', default = '', type = str)
+    parser.add_argument('--env', default = 'binomial', type = str, help='Environment model to run. Options : binomial or ode. Default : binomial')
+    parser.add_argument('--runs', default = 1, type = int, help='Number of experiments to be ran. Default : 1')
+    parser.add_argument('--timesteps', default = 60, type=int, help='Number of timesteps to run the model . Default : 60')
+    parser.add_argument('--parameters', default = [0, 1, 1, 1, 1, 0], type = list, help='Lockdown parameters. [0, p_w, p_s, p_l, w0, w1] Default : [0, 1, 1, 1, 1, 0]')
+    parser.add_argument('--lockdown', default = 14, type = int, help='Timestep when lockdown in enforced. Default : 14')
+    parser.add_argument('--lockdown_parameters', default = [0, 0.2, 0.0, 0.1, 1, 0], type = list, help='Lockdown parameters. [lockdown, p_w, p_s, p_l, w0, w1] Default : [0, 0.2, 0.0, 0.1, 1, 0]')
     
-    states = np.array(states)
-    # plots assume 3 compartments
-    # plot_simulation(states)
-    plot_i_hosp(states)
+
+    args = parser.parse_args()
+    print(args)
+
+    env = args.env
+    runs = args.runs
+    timesteps = args.timesteps
+    lockdown = args.lockdown 
+    lockdown_params = args.lockdown_parameters
+    lockdown_params[0] = lockdown
+    parameters = args.parameters
+
+    if env == 'binomial':
+        env = gym.make('EpiBelgiumBinomialContinuous-v0')
+
+    if env == 'ode':
+        env = gym.make('EpiBelgiumODEContinuous-v0')
+
+    
+    for run in range(runs):
+        env = TimeLimit(env, timesteps)
+        states = []
+        t, s = env.reset()
+        env.init_params(parameters, lockdown_params)
+        d = False
+        states.append(s)
+        print("initial state", s)
+
+        while not d:
+            # action doesnt matter, hardcoded in MDP
+            a = np.ones(3)          
+            s, r, d, _ = env.step(a)
+            #print(s, r)
+            states.append(s)
+        
+        states = np.array(states)
+        # plots assume 3 compartments
+        plot_simulation(states)

@@ -34,18 +34,25 @@ class EpiEnv(gym.Env):
         # reward_space is attack-rate for infections, hospitalizations and reduction in social contact
         self.reward_space = Box(low=np.zeros(3), high=np.array([N.sum(), N.sum(), 1]), dtype=np.float32)
 
+    def init_params(self, p, lp):
+
+        self.lockdown_params = lp
+        self.params = p
+
+        return
+
     def reset(self):
         self.model.current_model_state = self.model.init_model_state
-        self.tstep=1; self.lockdown = 14
-        return self.model.current_model_state
+        self.tstep=1
+        return self.tstep, self.model.current_model_state
 
     def step(self, action):
         # action is a 3d continuous vector
-        p_w, p_s, p_l = action
-        if self.tstep >= self.lockdown:
-            p_w, p_s, p_l = 0.2, 0.0, 0.1
+        self.lockdown = self.lockdown_params[0]
+        if self.tstep < self.lockdown:
+            p_w, p_s, p_l = action
         else:
-            p_w = p_s= p_l = 1
+            p_w, p_s, p_l = self.lockdown_params[1], self.lockdown_params[2], self.lockdown_params[3]
         
         # match all C components, reshape to match C shape
         p = np.array([1, p_w, p_w, p_s, p_l, p_l])[:, None, None]
@@ -56,11 +63,13 @@ class EpiEnv(gym.Env):
         # simulate for a whole week, sum the daily rewards
         r_ari = r_arh = r_sr = 0.
         # make sure we only take upper diagonal
-        for t in range(1):
+        for __ in range(1):
             # gradual compliance, C_target is only reached after a number of days
-            w0, w1 = gradual_compliance_weights(self.tstep-self.lockdown, self.beta_0, self.beta_1)
             if self.tstep < self.lockdown:
-                w0, w1 = 1, 0
+                w0, w1 = self.params[4], self.params[5]
+            else:
+                w0, w1 = gradual_compliance_weights(self.tstep-self.lockdown, self.beta_0, self.beta_1)
+            
             C = self.C*w0 + C_target*w1
             C_asym = C.sum(axis=0)
             C_sym = (C*self.C_sym_factor).sum(axis=0)
