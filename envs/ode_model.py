@@ -30,7 +30,7 @@ class ODEModel(object):
         delta3_star = 0.185
         phi0 = np.array([0.972, 0.992, 0.984, 0.987, 0.977, 0.971, 0.958, 0.926, 0.956, 0.926])
         #mu[1] = 0, as children are assumed not to die from COVID
-	self.mu = mu = np.array([0, 0.005, 0.005, 0.024, 0.037, 0.068, 0.183, 0.325, 0.446, 0.611])
+        self.mu = mu = np.array([0, 0.005, 0.005, 0.024, 0.037, 0.068, 0.183, 0.325, 0.446, 0.611])
         q = 0.051
 
         # == from code
@@ -56,14 +56,14 @@ class ODEModel(object):
 
 	#Table F1 Appendix
         self.omega = np.array([0.167, 0.095, 0.099, 0.162, 0.338, 0.275, 0.343, 0.378, 0.334, 0.302])
-        
-	#Table B1 (Appendix)
-	#last element was copied
+
+        #Table B1 (Appendix)
+        #last element was copied
         #TODO: in Lander's code, the first 2 entries are 99
-	self.phi1 = np.array([100, 100, 85, 85, 76, 76, 73, 69, 74, 74])/100 # last element was missing, as group was [80,100)
+        self.phi1 = np.array([100, 100, 85, 85, 76, 76, 73, 69, 74, 74])/100 # last element was missing, as group was [80,100)
        
-	#F.1 Appendix 
-	self.tau1 = mu*delta3_star
+        #F.1 Appendix
+        self.tau1 = mu*delta3_star
         self.tau2 = self.tau1
 
     def deriv(self, y, t, C_asym, C_sym):
