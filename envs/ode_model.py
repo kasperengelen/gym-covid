@@ -17,10 +17,12 @@ class ODEModel(object):
             setattr(self, name, i)
         self.compartments = compartments
 
+	#Table F1 Appendix
         delta2_star = 0.756
         delta3_star = 0.185
         phi0 = np.array([0.972, 0.992, 0.984, 0.987, 0.977, 0.971, 0.958, 0.926, 0.956, 0.926])
-        self.mu = mu = np.array([0, 0.005, 0.005, 0.024, 0.037, 0.068, 0.183, 0.325, 0.446, 0.611])
+        #mu[1] = 0, as children are assumed not to die from COVID
+	self.mu = mu = np.array([0, 0.005, 0.005, 0.024, 0.037, 0.068, 0.183, 0.325, 0.446, 0.611])
         q = 0.051
 
         # == from code
@@ -29,18 +31,31 @@ class ODEModel(object):
         self.q_sym = q
         # ==
 
+	#Table F1 Appendix
         self.gamma = 0.729
         self.theta = 0.475
+
+	#Section B.2, Appendix
         self.p = np.array([0.94,0.90,0.84,0.61,0.49,0.21,0.02,0.02,0.02,0.02])
 
+	#Table F1 Appendix
         self.delta1 = 0.24
-        self.delta2 = phi0*delta2_star
-        self.delta3 = (1-mu)*delta3_star
-        self.delta4 = self.delta3
-        self.psi = (1-phi0)*delta2_star
+	
+        self.delta2 = phi0*delta2_star #Section 2.1, 1st paragraph
+        self.delta3 = (1-mu)*delta3_star #TODO: where is this defined?
+        self.delta4 = self.delta3 #Communication with Lander
+        self.psi = (1-phi0)*delta2_star #Section 2.1, 1st paragraph
+
+	#Table F1 Appendix
         self.omega = np.array([0.167, 0.095, 0.099, 0.162, 0.338, 0.275, 0.343, 0.378, 0.334, 0.302])
-        self.phi1 = np.array([100, 100, 85, 85, 76, 76, 73, 69, 74., 74])/100 # last element was missing, as group was [80,100)
-        self.tau1 = mu*delta3_star
+        
+	#TODO: it looks like you took these from Table B1 (Appendix)
+	#TODO: There indeed, the last element is missing, you copied it? Perhaps we should double check this with Lander.
+	#TODO: note that phi_0 is also written here, but it seems to be different from Table F1?
+	self.phi1 = np.array([100, 100, 85, 85, 76, 76, 73, 69, 74, 74])/100 # last element was missing, as group was [80,100)
+       
+	#F.1 Appendix 
+	self.tau1 = mu*delta3_star
         self.tau2 = self.tau1
 
     def deriv(self, y, t, C_asym, C_sym):
@@ -104,6 +119,7 @@ if __name__ == '__main__':
     c = np.array(c)
 
     n_comp = 10
+    #TODO: origin of this file? 
     population = pd.read_csv('data/population_2020-01-01.csv')
     # sort by age, keep only age and population count (2 last columns)
     population = population.sort_values(by=['Leeftijd']).iloc[:,-2:].values
@@ -116,16 +132,20 @@ if __name__ == '__main__':
         group_index = np.logical_and(population[:,0] >= age_groups[i], population[:,0] < age_groups[i+1])
         population_groups[i] = np.sum(population[:,1][group_index])
 
-    # load confirmed cases
+    # load confirmed cases, based on section 2.7.3
     cases = pd.read_csv('data/cases.csv')
+    #TODO: origin of this file? 
     # keep first two weeks to compute the frequency if confirmed cases for each age group
     cases = cases[cases['DATE'] >= '2020-03-01']
+    #TODO: the paper states 12 March 2020?
     cases = cases[cases['DATE'] < '2020-03-14']
     age_cases = cases.groupby('AGEGROUP').agg(np.sum)
     rel_age_cases = age_cases/age_cases.sum()
     # Age-dependent asymptomatic proportions
+    # TODO: this is just self.p from above, right? Just use that? 
     p_vec = np.array([0.94,0.90,0.84,0.61,0.49,0.21,0.02,0.02,0.02,0.02])
     # param from model, TODO load from config file
+    # TODO: waar komt n0 vandaan? 
     n0 = np.exp(7.75220356739557)
     imported_cases = np.round(rel_age_cases.values.flatten()*n0*(1/(1-p_vec)),0)
     S = population_groups-imported_cases
@@ -137,6 +157,8 @@ if __name__ == '__main__':
 
     model = ODEModel(initial_state)
 
+    #TODO: in the paper this is Beta_1^* and beta_0^*, right, perhaps check whether these are the same?
+    #TODO: because, another beta_1 is used to model seroprevalence (see section E in the appendix)
     beta_0 = -5
     beta_1 = 1.404
 
@@ -174,4 +196,3 @@ if __name__ == '__main__':
     plt.plot(d, label='deaths')
     plt.legend()
     plt.show()
-
