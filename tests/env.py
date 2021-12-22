@@ -53,6 +53,7 @@ if __name__ == '__main__':
     #parser.add_argument('--algorithm', default = '', type = str)
     parser.add_argument('--env', default = 'binomial', type = str, help='Environment model to run. Options : binomial or ode. Default : binomial')
     parser.add_argument('--runs', default = 1, type = int, help='Number of experiments to be ran. Default : 1')
+    parser.add_argument('--seed', default = 22122021, type = int, help='RNG seed. Default : 22122021')
     parser.add_argument('--timesteps', default = 60, type=int, help='Number of timesteps to run the model . Default : 60')
     parser.add_argument('--parameters', default = [0, 1, 1, 1, 1, 0], type = list, help='Lockdown parameters. [0, p_w, p_s, p_l, w0, w1] Default : [0, 1, 1, 1, 1, 0]')
     parser.add_argument('--lockdown', default = 14, type = int, help='Timestep when lockdown in enforced. Default : 14')
@@ -69,6 +70,8 @@ if __name__ == '__main__':
     lockdown_params = args.lockdown_parameters
     lockdown_params[0] = lockdown
     parameters = args.parameters
+
+    np.random.seed(seed=args.seed)
 
     if env == 'binomial':
         env = gym.make('EpiBelgiumBinomialContinuous-v0')
