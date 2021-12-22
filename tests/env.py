@@ -5,21 +5,42 @@ import matplotlib.pyplot as plt
 import argparse
 
 
-def plot_simulation(states):
-
-    plt.figure()
+def plot_sim_states(states, alpha):
     i_hosp = states[:,6::10].sum(axis=1)
     i_icu = states[:,7::10].sum(axis=1)
     d = states[:,9::10].sum(axis=1)
-    plt.plot(i_hosp, label='hosp')
-    plt.plot(i_icu, label='icu')
-    plt.plot(i_hosp+i_icu, label='hosp+icu')
-    plt.plot(d, label='deaths')
-    plt.legend()
+    plt.plot(i_hosp, alpha=alpha, color="blue")
+    plt.plot(i_icu,  alpha=alpha, color="green")
+    plt.plot(d, alpha=alpha, color="red")
+
+def plot_simulation(states_per_stoch_run, ode_states):
+    plt.figure()
+    for states in states_per_stoch_run:
+        plot_sim_states(states, 0.2)
+
+    plot_sim_states(ode_states, 1)
+        
     plt.xlabel('day')
     plt.ylabel('n hosp')
     plt.show()
 
+def simulate(env, timesteps):
+    env = TimeLimit(env, timesteps)
+    states = []
+    t, s = env.reset()
+    env.init_params(parameters, lockdown_params)
+    d = False
+    states.append(s)
+    print("initial state", s)
+
+    while not d:
+        # action doesnt matter, hardcoded in MDP
+        a = np.ones(3)          
+        s, r, d, _ = env.step(a)
+        #print(s, r)
+        states.append(s)
+        
+    return np.array(states)
 
 if __name__ == '__main__':
     import gym
@@ -51,27 +72,16 @@ if __name__ == '__main__':
 
     if env == 'binomial':
         env = gym.make('EpiBelgiumBinomialContinuous-v0')
-
-    if env == 'ode':
-        env = gym.make('EpiBelgiumODEContinuous-v0')
-
-    
-    for run in range(runs):
-        env = TimeLimit(env, timesteps)
-        states = []
-        t, s = env.reset()
-        env.init_params(parameters, lockdown_params)
-        d = False
-        states.append(s)
-        print("initial state", s)
-
-        while not d:
-            # action doesnt matter, hardcoded in MDP
-            a = np.ones(3)          
-            s, r, d, _ = env.step(a)
-            #print(s, r)
-            states.append(s)
         
-        states = np.array(states)
-        # plots assume 3 compartments
-        plot_simulation(states)
+    ode_env = gym.make('EpiBelgiumODEContinuous-v0')
+    if env == 'ode':
+        env = ode_env
+
+    states_per_run = []
+    for run in range(runs):
+        states = simulate(env, timesteps)
+        states_per_run.append(states)
+        
+    # plots assume 3 compartments
+    ode_states = simulate(ode_env, timesteps)
+    plot_simulation(states_per_run, ode_states)
