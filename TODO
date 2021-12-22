@@ -1,0 +1,9 @@
+- Stochastic trajectories and ODE have the same dynamics
+	-> Check by: python3 tests/env.py --runs 10 --seed 10
+- Some seeds result in errors:
+	e.g.: python3 tests/env.py --runs 2 --seed 22122021
+- Lander thought that there might be something wrong with the contact matrices still.
+	-> He said contact matrices cover overlapping contacts. For example, kids contact their siblings at home, and at school. He asked us to check this as well, when adding all the matrices, that they add up to the original.
+	-> He gave me some code that appear to compute different distance matrices, lets' compare our matrices with that. (I asked for permission to share this.)
+- A solution to record new hospitalisations.
+	-> We can make a seperate compartement I_hosp_new and I_icu_new that have the same rates as I_hosp and I_icu respectively, but no outflow. This way, these compartments will record the cumulation of new hospitalisations.
