@@ -31,7 +31,7 @@ def simulate(env, timesteps):
     env.init_params(parameters, lockdown_params)
     d = False
     states.append(s)
-    print("initial state", s)
+    #print("initial state", s)
 
     while not d:
         # action doesnt matter, hardcoded in MDP
