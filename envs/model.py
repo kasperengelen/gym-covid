@@ -107,7 +107,7 @@ class EpiModel(object):
         self.tau1 = mu*delta3_star
         self.tau2 = self.tau1
 
-    def simulate_days(self, n_days, C_asym, C_sym):
+    def simulate_day(self, C_asym, C_sym):
         raise NotImplementedError('required for simulation')
 
 
