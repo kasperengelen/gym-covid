@@ -2,8 +2,13 @@
 
 Population taken from:
 https://statbel.fgov.be/nl/themas/bevolking/structuur-van-de-bevolking#figures
-and then clicking on:
-"Bevolking per geslacht en leeftijdsgroep voor België"
+ 1. click on: "Bevolking per geslacht en leeftijdsgroep voor België"
+ 2. Remove all rows except the 'Bevolking op 1 Januari 20XX'
+ 3. click on the small icon composed of 9 squares, on the left of the "leeftijdsgroep" column and choose "expand all"
+ 4. on the top right of the page, click on the download icon and choose csv
+ 
+retrieved on 05/12/21
+
 
 ## Cases
 
