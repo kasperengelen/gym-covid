@@ -4,6 +4,7 @@ sys.path.append(os.getcwd())
 import matplotlib.pyplot as plt
 import argparse
 import pandas as pd
+import datetime
 
 
 def plot_states(states, alpha):
@@ -45,19 +46,21 @@ def plot_simulation(states_per_stoch_run, ode_states, datapoints=None):
     plt.show()
 
 
-def simulate_lockdown(env):
+def simulate_scenario(env, scenario):
     states = []
     s = env.reset()
     d = False
     week = 0
-    # states.append(s)
+    # at start of simulation, no restrictions are applied
+    action = np.ones(3)
 
     while not d:
-        if week < 2:
-            action = np.ones(3)
-        # it's lockdown time
-        else:
-            action = np.array([0.2, 0.0, 0.1])
+        # at every timestep check if there are new restrictions
+        s = scenario[scenario['timestep'] == week]
+        if len(s):
+            # found new restrictions
+            action = np.array([s['work'].iloc[0], s['school'].iloc[0], s['leisure'].iloc[0]])
+
         s, r, d, info = env.step(action)
         states.append(s)
         week += 1
@@ -75,43 +78,36 @@ if __name__ == '__main__':
     
 
     parser = argparse.ArgumentParser(description='')
-    #parser.add_argument('--algorithm', default = '', type = str)
-    parser.add_argument('--env', default = 'binomial', type = str, help='Environment model to run. Options : binomial or ode. Default : binomial')
-    parser.add_argument('--runs', default = 1, type = int, help='Number of experiments to be ran. Default : 1')
-    parser.add_argument('--seed', default = 22122021, type = int, help='RNG seed. Default : 22122021')
-    parser.add_argument('--timesteps', default = 15, type=int, help='Number of timesteps to run the model . Default : 60')
-    parser.add_argument('--parameters', default = [0, 1, 1, 1, 1, 0], type = list, help='Lockdown parameters. [0, p_w, p_s, p_l, w0, w1] Default : [0, 1, 1, 1, 1, 0]')
-    parser.add_argument('--lockdown', default = 14, type = int, help='Timestep when lockdown in enforced. Default : 14')
-    parser.add_argument('--lockdown_parameters', default = [0, 0.2, 0.0, 0.1, 1, 0], type = list, help='Lockdown parameters. [lockdown, p_w, p_s, p_l, w0, w1] Default : [0, 0.2, 0.0, 0.1, 1, 0]')
+    parser.add_argument('scenario', type=str, help='Scenario file to be run.')
+    parser.add_argument('--runs', default=1, type=int, help='Number of binomial runs. Use 0 for ODE run only. Default : 1')
+    parser.add_argument('--seed', default=22122021, type=int, help='RNG seed. Default : 22122021')
     
-
     args = parser.parse_args()
     print(args)
-
-    env = args.env
     runs = args.runs
-    timesteps = args.timesteps
-    lockdown = args.lockdown 
-    lockdown_params = args.lockdown_parameters
-    lockdown_params[0] = lockdown
-    parameters = args.parameters
 
     np.random.seed(seed=args.seed)
 
-    if env == 'binomial':
-        env = gym.make('EpiBelgiumBinomialContinuous-v0')
-        
-    ode_env = gym.make('EpiBelgiumODEContinuous-v0')
-    if env == 'ode':
-        env = ode_env
-    env = TimeLimit(env, timesteps)
-    ode_env = TimeLimit(ode_env, timesteps)
+    # simulation timesteps in weeks
+    start = datetime.date(2020, 3, 1)
+    end = datetime.date(2020, 9, 5)
+    timesteps = round((end-start).days/7)
+
+    # load scenario and convert phase-dates to timesteps
+    scenario = pd.read_csv(args.scenario)
+    scenario['date'] = scenario['date'].astype(str)
+    to_timestep = lambda d: round((datetime.datetime.strptime(d, '%Y-%m-%d').date()-start).days/7)
+    scenario['timestep'] = [to_timestep(d) for d in scenario['date']]
+    print(scenario)
+
+    bin_env = TimeLimit(gym.make('EpiBelgiumBinomialContinuous-v0'), timesteps)
+    ode_env = TimeLimit(gym.make('EpiBelgiumODEContinuous-v0'), timesteps)
 
     states_per_run = []
     for run in range(runs):
-        states = simulate_lockdown(env)
+        states = simulate_scenario(bin_env, scenario)
         states_per_run.append(states)
         
     # plots assume 3 compartments
-    ode_states = simulate_lockdown(ode_env)
-    plot_simulation(states_per_run, ode_states, env.datapoints)
+    ode_states = simulate_scenario(ode_env, scenario)
+    plot_simulation(states_per_run, ode_states, bin_env.datapoints)
