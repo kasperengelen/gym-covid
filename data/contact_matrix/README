@@ -7,4 +7,4 @@ Procedures to construct the contact matrices used Abrams et al. (2021):
 	* This will generate an RData file: contact_matrices_be_2010.RData
 	* Copy this file to this directory as be_2010.RData
 - Preprocess be_2010.RData file into a set of CSV files:
-	*  
+	* python data/contact_matrix/preprocessing.py <path to contact_matrices_be_2010.RData> data/population/be_2010-01-01.csv <directory where matrices will be saved>
