@@ -35,6 +35,7 @@ class EpiEnv(gym.Env):
         self.reward_space = Box(low=np.zeros(3), high=np.array([N.sum(), N.sum(), 1]), dtype=np.float32)
 
         self.datapoints = datapoints
+        self.days_per_timestep = 7
 
     def reset(self):
         self.model.current_state = self.model.init_state.copy()
@@ -53,8 +54,8 @@ class EpiEnv(gym.Env):
 
         # simulate for a whole week, sum the daily rewards
         r_ari = r_arh = r_sr = 0.
-        state_n = np.empty((7,) + self.observation_space.shape)
-        for day in range(7):
+        state_n = np.empty((self.days_per_timestep,) + self.observation_space.shape)
+        for day in range(self.days_per_timestep):
             # gradual compliance, C_target is only reached after a number of days
             w0, w1 = gradual_compliance_weights(day, self.beta_0, self.beta_1)
             

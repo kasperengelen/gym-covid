@@ -50,20 +50,20 @@ def simulate_scenario(env, scenario):
     states = []
     s = env.reset()
     d = False
-    week = 0
+    timestep = 0
     # at start of simulation, no restrictions are applied
     action = np.ones(3)
 
     while not d:
         # at every timestep check if there are new restrictions
-        s = scenario[scenario['timestep'] == week]
+        s = scenario[scenario['timestep'] == timestep]
         if len(s):
             # found new restrictions
             action = np.array([s['work'].iloc[0], s['school'].iloc[0], s['leisure'].iloc[0]])
 
         s, r, d, info = env.step(action)
         states.append(s)
-        week += 1
+        timestep += 1
     # array of shape [Week DayOfWeek Compartment AgeGroup]
     states = np.array(states)
     # reshape to [Day Compartment AgeGroup]
@@ -88,20 +88,26 @@ if __name__ == '__main__':
 
     np.random.seed(seed=args.seed)
 
+    # load the environments
+    bin_env = gym.make('EpiBelgiumBinomialContinuous-v0')
+    ode_env = gym.make('EpiBelgiumODEContinuous-v0')
+    days_per_timestep = bin_env.days_per_timestep
+
     # simulation timesteps in weeks
     start = datetime.date(2020, 3, 1)
     end = datetime.date(2020, 9, 5)
-    timesteps = round((end-start).days/7)
+    timesteps = round((end-start).days/days_per_timestep)
+
+    # apply timestep limit to environments
+    bin_env = TimeLimit(bin_env, timesteps)
+    ode_env = TimeLimit(ode_env, timesteps)
 
     # load scenario and convert phase-dates to timesteps
     scenario = pd.read_csv(args.scenario)
     scenario['date'] = scenario['date'].astype(str)
-    to_timestep = lambda d: round((datetime.datetime.strptime(d, '%Y-%m-%d').date()-start).days/7)
+    to_timestep = lambda d: round((datetime.datetime.strptime(d, '%Y-%m-%d').date()-start).days/days_per_timestep)
     scenario['timestep'] = [to_timestep(d) for d in scenario['date']]
     print(scenario)
-
-    bin_env = TimeLimit(gym.make('EpiBelgiumBinomialContinuous-v0'), timesteps)
-    ode_env = TimeLimit(gym.make('EpiBelgiumODEContinuous-v0'), timesteps)
 
     states_per_run = []
     for run in range(runs):
