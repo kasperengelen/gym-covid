@@ -208,6 +208,9 @@ class BinomialModel(EpiModel):
         y[self.I_icu_new] += I_icu_n
         y[self.D_new] += D_hosp_n + D_icu_n
 
+        # clip negative y values (y < 0) to 0
+        y[y<0] = 0
+
     def simulate_day(self, C_asym, C_sym):
         
         y = self.current_state
