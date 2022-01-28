@@ -51,6 +51,7 @@ def simulate_scenario(env, scenario):
     s = env.reset()
     d = False
     timestep = 0
+    ret = 0
     # at start of simulation, no restrictions are applied
     action = np.ones(3)
 
@@ -64,8 +65,10 @@ def simulate_scenario(env, scenario):
         s, r, d, info = env.step(action)
         states.append(s)
         timestep += 1
+        ret += r
     # array of shape [Week DayOfWeek Compartment AgeGroup]
     states = np.array(states)
+    print(ret)
     # reshape to [Day Compartment AgeGroup]
     return np.array(states).reshape(states.shape[0]*states.shape[1], *states.shape[2:])
 
