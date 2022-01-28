@@ -99,9 +99,8 @@ class EpiEnv(gym.Env):
             S_s_n = s_n[self.model.S]
             r_ari += -(np.sum(S_s) - np.sum(S_s_n))
             # attack rate hospitalization
-            I_hosp_new_s = s[self.model.I_hosp_new]
-            I_hosp_new_s_n = s_n[self.model.I_hosp_new]
-            r_arh += -(np.sum(I_hosp_new_s) - np.sum(I_hosp_new_s_n))
+            I_hosp_new_s_n = s_n[self.model.I_hosp_new] + s_n[self.model.I_icu_new]
+            r_arh += -np.sum(I_hosp_new_s_n)
             # reduction in social contact
             R_s_n = s_n[self.model.R]
             # all combinations of age groups
