@@ -26,7 +26,7 @@ Here are some key dates:
  - **2020-03-14**: start of first lockdown in Belgium
  - **2020-05-04**: end of first lockdown, start of exit-strategy (reopening of schools, bars, reducing telework, etc)
  - **2020-07-01**: start of summer holidays (schools are closed)
- - **2020-09-01**: end of summuer holidays (and end of simulation)
+ - **2020-09-01**: end of summer holidays (and end of simulation)
 
 We provide 2 variants of the MDPs:
  - One starts at the start of the epidemic (2020-03-01), allowing you to simulate alternative strategies to the lockdown that occured in Belgium
