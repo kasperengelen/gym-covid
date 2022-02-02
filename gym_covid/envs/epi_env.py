@@ -47,6 +47,7 @@ class EpiEnv(gym.Env):
 
         self.datapoints = datapoints
         self.days_per_timestep = 7
+        self.today = datetime.date(2020, 3, 1)
 
         self.events = {}
         # include school holiday

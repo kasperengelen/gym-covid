@@ -59,6 +59,7 @@ def simulate_scenario(env, scenario):
         # at every timestep check if there are new restrictions
         s = scenario[scenario['timestep'] == timestep]
         if len(s):
+            print(f'timesteps {timestep}: {s["phase"]}')
             # found new restrictions
             action = np.array([s['work'].iloc[0], s['school'].iloc[0], s['leisure'].iloc[0]])
 
@@ -92,8 +93,8 @@ if __name__ == '__main__':
     np.random.seed(seed=args.seed)
 
     # load the environments
-    bin_env = gym.make('EpiBelgiumBinomialContinuous-v0')
-    ode_env = gym.make('EpiBelgiumODEContinuous-v0')
+    bin_env = gym.make('BECovidBinomialContinuous-v0')
+    ode_env = gym.make('BECovidODEContinuous-v0')
     days_per_timestep = bin_env.days_per_timestep
 
     # simulation timesteps in weeks
