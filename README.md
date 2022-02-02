@@ -19,7 +19,7 @@ Each state is a 13x10 matrix that represent the 13 different compartments for ea
 
 ### Timesteps
 
-At every timestep, you can choose an action (more on that later) that will lead you from state `S` to `S``. Concretely, the model will simulate the evolution of the epidemic for **1 week** (and thus return the state of the epidemic one week later) before allowing you to take another action. 
+At every timestep, you can choose an action (more on that later) that will lead you from state `S` to `S'`. Concretely, the model will simulate the evolution of the epidemic for **1 week** (and thus return the state of the epidemic one week later) before allowing you to take another action. 
 
 Here are some key dates:
  - **2020-03-01**: start of the epidemic
