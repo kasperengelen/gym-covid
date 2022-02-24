@@ -127,7 +127,7 @@ env = gym.make('BECovidBinomialContinuous-v0')
 All parameters used in our implementation were taken from [1]. More information on how the data (SCMs, population counts, etc) was obtained can be found in the `data/` folder. The different exit-strategies analysed in the paper are present in the `scenarios/` folder and can be executed as follows (`baseline.csv` is lockdown only):
 ```
 cd gym_covid
-python scenarios/run.py scenarions/baseline.csv
+python scenarios/run.py scenarios/baseline.csv
 ```
 
 Here is a plot showing the simulated hospitalization and deaths vs the reported ones during the lockdown period:
