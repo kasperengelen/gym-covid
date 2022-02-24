@@ -62,7 +62,9 @@ class EpiEnv(gym.Env):
         self.model.current_state = self.model.init_state.copy()
         self.current_C = self.C
         self.today = datetime.date(2020, 3, 1)
-        return self.model.current_state
+        # check for events on this day
+        event = self.today in self.events
+        return self.model.current_state, event
 
     def step(self, action):
         # action is a 3d continuous vector
@@ -77,12 +79,15 @@ class EpiEnv(gym.Env):
         # simulate for a whole week, sum the daily rewards
         r_ari = r_arh = r_sr = 0.
         state_n = np.empty((self.days_per_timestep,) + self.observation_space.shape)
+        event_n = np.zeros((self.days_per_timestep, 1), dtype=bool)
         for day in range(self.days_per_timestep):
             # every day check if there are events on the calendar
             today = self.today + datetime.timedelta(days=day)
             if today in self.events:
                 C_full, C_c, C_t = self.events[today](self.C.copy(), self.current_C, C_target)
                 C_full = C_full.sum(0)
+                # today is a school holiday
+                event_n[day] = True
             else:
                 C_full, C_c, C_t = self.C_full, self.current_C, C_target
 
@@ -118,4 +123,4 @@ class EpiEnv(gym.Env):
         self.today = self.today + datetime.timedelta(days=self.days_per_timestep)
 
         # next-state, reward, terminal?, info
-        return state_n, np.array([r_ari, r_arh, r_sr]), False, {}
+        return (state_n, event_n), np.array([r_ari, r_arh, r_sr]), False, {}
