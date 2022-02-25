@@ -9,13 +9,16 @@ We implement both the stochastic (binomial) model as well as the ODE model descr
 
 ### States
 
-Each state is a 13x10 matrix that represent the 13 different compartments for each of the 10 different age-groups.
+Each state is a tuple that contains 2 elements:
+The first is a 13x10 matrix that represent the 13 different compartments for each of the 10 different age-groups.
 
  - The different compartments are (in order): `S`, `E`, `I_presym`, `I_asym`, `I_mild`, `I_sev`, `I_hosp`, `I_icu`, `R`, `D`, `I_hosp_new`, `I_icu_new`, `D_new`
 
    Compared to [1], there are 3 additional compartments: `I_hosp_new`, `I_icu_new`, `D_new` that explicitly model the daily new hospitalizations and deaths. These compartments have no impact on the model dynamics and are only there for information-tracking purposes.
 
  - The different age-groups are (in order): [0, 10), [10, 20), [20, 30), [30, 40), [40, 50), [50, 60), [60, 70), [70, 80), [80, 90), [90, inf)
+
+ The second is a Boolean flag telling if the current day is a school holiday.
 
 ### Timesteps
 
@@ -127,7 +130,7 @@ env = gym.make('BECovidBinomialContinuous-v0')
 All parameters used in our implementation were taken from [1]. More information on how the data (SCMs, population counts, etc) was obtained can be found in the `data/` folder. The different exit-strategies analysed in the paper are present in the `scenarios/` folder and can be executed as follows (`baseline.csv` is lockdown only):
 ```
 cd gym_covid
-python scenarios/run.py scenarions/baseline.csv
+python scenarios/run.py scenarios/baseline.csv
 ```
 
 Here is a plot showing the simulated hospitalization and deaths vs the reported ones during the lockdown period:
