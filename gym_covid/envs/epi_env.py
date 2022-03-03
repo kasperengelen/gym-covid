@@ -125,7 +125,7 @@ class EpiEnv(gym.Env):
         # social reduction for work, school and leisure
         r_sr_w = r_sr[1]+r_sr[2]
         r_sr_s = r_sr[3]
-        r_sr_l = r_sr[3]+r_sr[5]
+        r_sr_l = r_sr[4]+r_sr[5]
 
         # next-state, reward, terminal?, info
         return (state_n, event_n), np.array([r_ari, r_arh, r_sr_w, r_sr_s, r_sr_l]), False, {}
