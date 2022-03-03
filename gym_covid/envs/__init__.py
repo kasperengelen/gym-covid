@@ -68,6 +68,12 @@ def until_2020_09_01(env):
     return TimeLimit(env, timesteps)
 
 
+def until_2021_01_01(env):
+    end = datetime.date(2021, 1, 1)
+    timesteps = round((end-env.today).days/env.days_per_timestep)
+    return TimeLimit(env, timesteps)
+
+
 def discretize_actions(env, work=None, school=None, leisure=None):
     if work is None:
         work = np.array([0, 30, 60])/100
@@ -81,12 +87,14 @@ def discretize_actions(env, work=None, school=None, leisure=None):
     return DiscreteAction(env, actions)
 
 
-def create_env(env_type='ODE', discrete_actions=False, simulate_lockdown=True):
+def create_env(env_type='ODE', discrete_actions=False, simulate_lockdown=True, until=None):
     if env_type == 'ODE':
         env = be_ode()
     else:
         env = be_binomial()
-    env = until_2020_09_01(env)
+    # set timelimit
+    if until is not None:
+        env = until(env)
     if simulate_lockdown:
         env = Lockdown(env)
     if discrete_actions:
@@ -97,14 +105,17 @@ def create_env(env_type='ODE', discrete_actions=False, simulate_lockdown=True):
 for env_type in ('ODE', 'Binomial'):
     for discrete_actions in (False, True):
         for simulate_lockdown in (False, True):
-            a = 'Discrete' if discrete_actions else 'Continuous'
-            l = 'WithLockdown' if simulate_lockdown else ''
-            # envs
-            register(
-                id=f'BECovid{l}{env_type}{a}-v0',
-                entry_point='gym_covid.envs:create_env',
-                kwargs={
-                    'env_type': env_type,
-                    'discrete_actions': discrete_actions,
-                    'simulate_lockdown': simulate_lockdown}
-                )
+            for until in (until_2020_09_01, until_2021_01_01):
+                a = 'Discrete' if discrete_actions else 'Continuous'
+                l = 'WithLockdown' if simulate_lockdown else ''
+                u = 'Until2021' if until == until_2021_01_01 else ''
+                # envs
+                register(
+                    id=f'BECovid{l}{u}{env_type}{a}-v0',
+                    entry_point='gym_covid.envs:create_env',
+                    kwargs={
+                        'env_type': env_type,
+                        'discrete_actions': discrete_actions,
+                        'simulate_lockdown': simulate_lockdown,
+                        'until': until}
+                    )

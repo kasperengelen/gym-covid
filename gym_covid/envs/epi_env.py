@@ -51,12 +51,13 @@ class EpiEnv(gym.Env):
 
         self.events = {}
         # include school holiday
-        holiday_start = datetime.date(2020, 7, 1)
-        holiday_end = datetime.date(2020, 9, 1)
-        # enforce holiday-event (0% school contacts) every day of school-holiday
-        for i in range((holiday_end-holiday_start).days+1):
-            day = holiday_start+datetime.timedelta(days=i)
-            self.events[day] = school_holidays
+        for holiday_start, holiday_end in ((datetime.date(2020, 7, 1), datetime.date(2020, 8, 31)),
+                                           (datetime.date(2020, 11, 2), datetime.date(2020, 11, 8)),
+                                           (datetime.date(2020, 12, 21), datetime.date(2021, 1, 3))):
+            # enforce holiday-event (0% school contacts) every day of school-holiday
+            for i in range((holiday_end-holiday_start).days+1):
+                day = holiday_start+datetime.timedelta(days=i)
+                self.events[day] = school_holidays
 
     def reset(self):
         self.model.current_state = self.model.init_state.copy()
