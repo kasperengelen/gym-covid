@@ -9,7 +9,7 @@ We implement both the stochastic (binomial) model as well as the ODE model descr
 
 ### States
 
-Each state is a tuple that contains 2 elements:
+Each state is a tuple that contains 3 elements:
 The first is a 13x10 matrix that represent the 13 different compartments for each of the 10 different age-groups.
 
  - The different compartments are (in order): `S`, `E`, `I_presym`, `I_asym`, `I_mild`, `I_sev`, `I_hosp`, `I_icu`, `R`, `D`, `I_hosp_new`, `I_icu_new`, `D_new`
@@ -19,6 +19,8 @@ The first is a 13x10 matrix that represent the 13 different compartments for eac
  - The different age-groups are (in order): [0, 10), [10, 20), [20, 30), [30, 40), [40, 50), [50, 60), [60, 70), [70, 80), [80, 90), [90, inf)
 
  The second is a Boolean flag telling if the current day is a school holiday.
+
+ Finally, the third element is the previous action. This acts as a proxy for providing the full Social Contact Matrix (see below), which is required as the previous matrix impacts the way the epidemic evolves.
 
 ### Timesteps
 

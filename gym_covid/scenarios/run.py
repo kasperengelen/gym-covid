@@ -64,7 +64,7 @@ def simulate_scenario(env, scenario):
             action = np.array([s['work'].iloc[0], s['school'].iloc[0], s['leisure'].iloc[0]])
 
         s, r, d, info = env.step(action)
-        # state is tuple (compartments, events), only keep compartments
+        # state is tuple (compartments, events, prev_action), only keep compartments
         states.append(s[0])
         timestep += 1
         ret += r
