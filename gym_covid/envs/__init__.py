@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 from importlib_resources import files, as_file
 import datetime
+import gym
 
 
 def be_config():
@@ -87,6 +88,34 @@ def discretize_actions(env, work=None, school=None, leisure=None):
     return DiscreteAction(env, actions)
 
 
+class EndPenalty(gym.Wrapper):
+
+    def step(self, action):
+        s, r, t, info = super(EndPenalty, self).step(action)
+        # if terminal, continue executing with no social contact for penalty
+        if t:
+            # match all C components, reshape to match C shape
+            p = np.array([0, 0, 0, 0, 0, 0])[:, None, None]
+            C_asym = self.env.C*p
+            C_sym = (C_asym*self.env.C_sym_factor)
+            I_h = 1
+            # S_s = s[0][-1, self.env.model.S].sum()
+            penalty = 0
+            days = 0
+            while I_h >= 1:
+                s_n = self.env.model.simulate_day(C_asym.sum(axis=0), C_sym.sum(axis=0))
+                I_h = np.sum(s_n[self.env.model.I_hosp] + s_n[self.env.model.I_icu])
+                penalty += I_h
+                # print(days, s_n[self.env.model.I_hosp] + s_n[self.env.model.I_icu])
+                days += 1
+            # S_s_n = s_n[self.env.model.S].sum()
+            r[1] -= penalty
+            # print(f'additional days: {days} \t penalty {penalty}')
+            # breakpoint()
+        return s, r, t, info
+
+
+
 def create_env(env_type='ODE', discrete_actions=False, simulate_lockdown=True, until=None):
     if env_type == 'ODE':
         env = be_ode()
@@ -95,6 +124,7 @@ def create_env(env_type='ODE', discrete_actions=False, simulate_lockdown=True, u
     # set timelimit
     if until is not None:
         env = until(env)
+        env = EndPenalty(env)
     if simulate_lockdown:
         env = Lockdown(env)
     if discrete_actions:
