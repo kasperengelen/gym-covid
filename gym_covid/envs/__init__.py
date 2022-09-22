@@ -89,8 +89,8 @@ def discretize_actions(env, work=None, school=None, leisure=None):
 
 
 class EndPenalty(gym.Wrapper):
-    d_I_limit = 0.5
-    d_I_penalty = 1e6
+    d_I_limit = 1
+    d_I_penalty = 1e4
 
     def step(self, action):
         s, r, t, info = super(EndPenalty, self).step(action)
