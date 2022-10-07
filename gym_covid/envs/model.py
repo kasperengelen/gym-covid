@@ -1,9 +1,74 @@
 import numpy as np
 from scipy.integrate import odeint
 import pandas as pd
+from numba.experimental import jitclass
+from numba import types, jit
+from torch import binomial
 
-
+# @jitclass([
+#     ('n_comp', types.int32),
+#     ('S', types.int32),
+#     ('E', types.int32),
+#     ('I_asym', types.int32),
+#     ('I_mild', types.int32),
+#     ('I_sev', types.int32),
+#     ('I_hosp', types.int32),
+#     ('I_icu', types.int32),
+#     ('R', types.int32),
+#     ('D', types.int32),
+#     ('I_hosp_new', types.int32),
+#     ('I_icu_new', types.int32),
+#     ('D_new', types.int32),
+#     ('q_asym', types.float64),
+#     ('q_sym', types.float64),
+#     ('gamma', types.float64),
+#     ('theta', types.float64),
+#     ('p', types.float64[:]),
+#     ('delta1', types.float64),
+#     ('delta2', types.float64[:]),
+#     ('delta3', types.float64[:]),
+#     ('delta4', types.float64[:]),
+#     ('psi', types.float64[:]),
+#     ('omega', types.float64[:]),
+#     ('phi1', types.float64[:]),
+#     ('tau1', types.float64[:]),
+#     ('tau2', types.float64[:]),
+#     ('init_state', types.float64[:, :]),
+#     ('current_state', types.float64[:, :]),
+# ])
 class EpiModel(object):
+    # variable types
+    n_comp: int
+    S: int
+    E: int
+    I_presym: int
+    I_asym: int
+    I_mild: int
+    I_sev: int
+    I_hosp: int
+    I_icu: int
+    R: int
+    D: int
+    I_hosp_new: int
+    I_icu_new: int
+    D_new: int
+    q_asym: float
+    q_sym: float
+    gamma: float
+    theta: float
+    p: np.ndarray
+    delta1: float
+    delta2: np.ndarray
+    delta3: np.ndarray
+    delta4: np.ndarray
+    psi: np.ndarray
+    omega: np.ndarray
+    phi1: np.ndarray
+    tau1: np.ndarray
+    tau2: np.ndarray
+    init_state: np.ndarray
+    current_state: np.ndarray
+
 
     compartments = ['S', 'E', 'I_presym', 'I_asym', 'I_mild', 'I_sev', 'I_hosp', 'I_icu', 'R', 'D', 'I_hosp_new', 'I_icu_new', 'D_new']
     # provide indexes for compartments: self.S = 0, self.E = 1, etc
@@ -154,7 +219,180 @@ class ODEModel(EpiModel):
         return self.current_state
 
 
+@jit(nopython=True)
+def _step_float(n, rate):
+    inv_rate = 1-np.exp(rate)
+    stepped = np.zeros_like(n)
+    for i in range(10):
+        stepped[i] = np.random.binomial(n[i], inv_rate)
+    return stepped
+
+@jit(nopython=True)
+def _step_ndarray(n, rate):
+    inv_rate = 1-np.exp(rate)
+    stepped = np.zeros_like(n)
+    for i in range(10):
+        stepped[i] = np.random.binomial(n[i], inv_rate[i])
+    return stepped
+
 _step = lambda n, rate: np.random.binomial(n, 1-np.exp(rate))
+# _step_ndarray = _step_float = _step
+
+@jit(nopython=True)
+def binomial_step(
+    n_comp: int,
+    S: int,
+    E: int,
+    I_presym: int,
+    I_asym: int,
+    I_mild: int,
+    I_sev: int,
+    I_hosp: int,
+    I_icu: int,
+    R: int,
+    D: int,
+    I_hosp_new: int,
+    I_icu_new: int,
+    D_new: int,
+    q_asym: float,
+    q_sym: float,
+    gamma: float,
+    theta: float,
+    p: np.ndarray,
+    delta1: float,
+    delta2: np.ndarray,
+    delta3: np.ndarray,
+    delta4: np.ndarray,
+    psi: np.ndarray,
+    omega: np.ndarray,
+    phi1: np.ndarray,
+    tau1: np.ndarray,
+    tau2: np.ndarray,
+    y: np.ndarray,
+    C_asym: np.ndarray,
+    C_sym: np.ndarray,
+    h: float,
+):
+    # modifies `y` in-place
+    # compute lambda
+    beta_asym = q_asym*C_asym
+    beta_sym = q_sym*C_sym
+
+    lambda_asym = beta_asym*(y[I_presym] + y[I_asym])
+    lambda_sym = beta_sym*(y[I_mild] + y[I_sev])
+    lambda_ = lambda_asym.sum(1) + lambda_sym.sum(1)
+
+    E_n = _step_ndarray(y[S], -h*lambda_)
+    I_presym_n = _step_float(y[E], -h*gamma)
+    I_asym_n = _step_ndarray(y[I_presym], -h * p * theta)
+    I_mild_n = _step_ndarray(y[I_presym], -h * (1-p) * theta)
+    I_sev_n = _step_ndarray(y[I_mild], -h * psi)
+    I_hosp_n = _step_ndarray(y[I_sev], -h * phi1 * omega)
+    I_icu_n = _step_ndarray(y[I_sev], -h * (1-phi1) * omega)
+    D_hosp_n = _step_ndarray(y[I_hosp], -h * tau1)
+    D_icu_n = _step_ndarray(y[I_icu], -h * tau1)
+    R_asym_n = _step_float(y[I_asym], -h * delta1)
+    R_mild_n = _step_ndarray(y[I_mild], -h * delta2)
+    R_hosp_n = _step_ndarray(y[I_hosp], -h * delta3)
+    R_icu_n = _step_ndarray(y[I_icu], -h * delta3)
+
+    y[S] = y[S] - E_n
+    y[E] = y[E] + E_n - I_presym_n
+    y[I_presym] = y[I_presym] + I_presym_n - I_asym_n - I_mild_n
+    y[I_asym] = y[I_asym] + I_asym_n - R_asym_n
+    y[I_mild] = y[I_mild] + I_mild_n - I_sev_n - R_mild_n
+    y[I_sev] = y[I_sev] + I_sev_n - I_hosp_n - I_icu_n
+    y[I_hosp] = y[I_hosp] + I_hosp_n - D_hosp_n - R_hosp_n
+    y[I_icu] = y[I_icu] + I_icu_n - D_icu_n - R_icu_n
+    y[D] = y[D] + D_hosp_n + D_icu_n
+    y[R] = y[R] + R_asym_n + R_mild_n + R_hosp_n + R_icu_n
+    # keep track of daily hospitalizations, deaths
+    y[I_hosp_new] += I_hosp_n
+    y[I_icu_new] += I_icu_n
+    y[D_new] += D_hosp_n + D_icu_n
+
+    # clip negative y values (y < 0) to 0
+    # y[y<0] = 0
+    y.clip(0, None, out=y)
+
+
+@jit(nopython=True)
+def binomial_simulate_day(
+    n_comp: int,
+    S: int,
+    E: int,
+    I_presym: int,
+    I_asym: int,
+    I_mild: int,
+    I_sev: int,
+    I_hosp: int,
+    I_icu: int,
+    R: int,
+    D: int,
+    I_hosp_new: int,
+    I_icu_new: int,
+    D_new: int,
+    q_asym: float,
+    q_sym: float,
+    gamma: float,
+    theta: float,
+    p: np.ndarray,
+    delta1: float,
+    delta2: np.ndarray,
+    delta3: np.ndarray,
+    delta4: np.ndarray,
+    psi: np.ndarray,
+    omega: np.ndarray,
+    phi1: np.ndarray,
+    tau1: np.ndarray,
+    tau2: np.ndarray,
+    current_state: np.ndarray,
+    C_asym: np.ndarray,
+    C_sym: np.ndarray,
+    h: float,
+    h_inv: float,
+):
+    y = current_state
+    # every day reset the 'new' counts
+    y[I_hosp_new] = 0.
+    y[I_icu_new] = 0.
+    y[D_new] = 0.
+    # list comprehension is faster than for-loop
+    [binomial_step(
+        n_comp,
+        S,
+        E,
+        I_presym,
+        I_asym,
+        I_mild,
+        I_sev,
+        I_hosp,
+        I_icu,
+        R,
+        D,
+        I_hosp_new,
+        I_icu_new,
+        D_new,
+        q_asym,
+        q_sym,
+        gamma,
+        theta,
+        p,
+        delta1,
+        delta2,
+        delta3,
+        delta4,
+        psi,
+        omega,
+        phi1,
+        tau1,
+        tau2,
+        y,
+        C_asym,
+        C_sym,
+        h) for _ in range(h_inv)]
+
+    return y.copy()
 
 
 class BinomialModel(EpiModel):
@@ -212,6 +450,41 @@ class BinomialModel(EpiModel):
         y[y<0] = 0
 
     def simulate_day(self, C_asym, C_sym):
+        return binomial_simulate_day(
+                self.n_comp,
+                self.S,
+                self.E,
+                self.I_presym,
+                self.I_asym,
+                self.I_mild,
+                self.I_sev,
+                self.I_hosp,
+                self.I_icu,
+                self.R,
+                self.D,
+                self.I_hosp_new,
+                self.I_icu_new,
+                self.D_new,
+                self.q_asym,
+                self.q_sym,
+                self.gamma,
+                self.theta,
+                self.p,
+                self.delta1,
+                self.delta2,
+                self.delta3,
+                self.delta4,
+                self.psi,
+                self.omega,
+                self.phi1,
+                self.tau1,
+                self.tau2,
+                self.current_state,
+                C_asym,
+                C_sym,
+                self.h,
+                self.h_inv,
+        )
         
         y = self.current_state
         # every day reset the 'new' counts
