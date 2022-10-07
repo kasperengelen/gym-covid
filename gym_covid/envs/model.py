@@ -404,7 +404,7 @@ class BinomialModel(EpiModel):
         self.init_state = self.init_state.astype(int)
         self.current_state = self.current_state.astype(int)
 
-        self.h_inv = 24
+        self.h_inv = 24*10
         self.h = 1/self.h_inv
 
     def step(self, y, C_asym, C_sym):
