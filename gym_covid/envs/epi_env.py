@@ -75,7 +75,7 @@ class EpiEnv(gym.Env):
         p = np.array([1, p_w, p_w, p_s, p_l, p_l])[:, None, None]
         C_target = self.C*p
 
-        s = self.model.current_state
+        s = self.model.current_state.copy()
 
         # simulate for a whole week, sum the daily rewards
         r_ari = r_arh = r_sr = 0.
