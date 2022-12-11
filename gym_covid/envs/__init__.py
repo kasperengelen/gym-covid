@@ -4,6 +4,7 @@ from gym_covid.envs.model import ODEModel, BinomialModel
 from gym_covid.envs.epi_env import EpiEnv
 from gym_covid.envs.discrete_actions import DiscreteAction
 from gym_covid.envs.lockdown import Lockdown
+from gym_covid.envs.budget_actions import BudgetActionWrapper
 import numpy as np
 import pandas as pd
 import json
@@ -127,7 +128,7 @@ class EndPenalty(gym.Wrapper):
 
 
 
-def create_env(env_type='ODE', discrete_actions=False, simulate_lockdown=True, until=None):
+def create_env(env_type='ODE', discrete_actions=False, simulate_lockdown=True, until=None, budget=None):
     if env_type == 'ODE':
         env = be_ode()
     else:
@@ -138,6 +139,8 @@ def create_env(env_type='ODE', discrete_actions=False, simulate_lockdown=True, u
         env = EndPenalty(env)
     if simulate_lockdown:
         env = Lockdown(env)
+    if budget is not None:
+        env = BudgetActionWrapper(env, budget)
     if discrete_actions:
         env = discretize_actions(env)
     return env
@@ -147,16 +150,19 @@ for env_type in ('ODE', 'Binomial'):
     for discrete_actions in (False, True):
         for simulate_lockdown in (False, True):
             for until in (until_2020_09_01, until_2021_01_01):
-                a = 'Discrete' if discrete_actions else 'Continuous'
-                l = 'WithLockdown' if simulate_lockdown else ''
-                u = 'Until2021' if until == until_2021_01_01 else ''
-                # envs
-                register(
-                    id=f'BECovid{l}{u}{env_type}{a}-v0',
-                    entry_point='gym_covid.envs:create_env',
-                    kwargs={
-                        'env_type': env_type,
-                        'discrete_actions': discrete_actions,
-                        'simulate_lockdown': simulate_lockdown,
-                        'until': until}
-                    )
+                for budget in (None, 2, 3, 4, 5):
+                    b = f'Budget{budget}' if budget is not None else ''
+                    a = 'Discrete' if discrete_actions else 'Continuous'
+                    l = 'WithLockdown' if simulate_lockdown else ''
+                    u = 'Until2021' if until == until_2021_01_01 else ''
+                    # envs
+                    register(
+                        id=f'BECovid{l}{u}{env_type}{b}{a}-v0',
+                        entry_point='gym_covid.envs:create_env',
+                        kwargs={
+                            'env_type': env_type,
+                            'discrete_actions': discrete_actions,
+                            'simulate_lockdown': simulate_lockdown,
+                            'until': until,
+                            'budget': budget}
+                        )
