@@ -65,7 +65,7 @@ def simulate_scenario(env, scenario):
 
         s, r, d, info = env.step(action)
         # state is tuple (compartments, events, prev_action), only keep compartments
-        states.append(s[0])
+        states.append(s[1])
         timestep += 1
         ret += r
     # array of shape [Week DayOfWeek Compartment AgeGroup]
