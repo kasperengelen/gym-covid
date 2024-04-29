@@ -143,5 +143,3 @@ Here is a plot showing the simulated hospitalization and deaths vs the reported 
 ![wave 1 simulation](/docs/assets/wave1.png "A simulation of the first wave")
 
 The MDPs without lockdown start at timestep 0, while the ones with lockdown start at the last timestep on this plot. 
-
-[1]: 
