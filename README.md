@@ -1,7 +1,7 @@
 # gym_covid
 ## A gym environment for a compartment model modelling the first COVID wave in Belgium.
 
-A Python implementation of the COVID model by Abrams et al. This is a compartment model used to analyse the first wave of COVID that occured in Belgium starting from 01 March 2020. It explicitly models hospitalizations and ICU-hospitalizations, as well as contact-reduction for symptomatic people (as they have to stay at home).
+A Python implementation of the COVID model by Abrams et al. (2021). This is a compartment model used to analyse the first wave of COVID that occured in Belgium starting from 01 March 2020. It explicitly models hospitalizations and ICU-hospitalizations, as well as contact-reduction for symptomatic people (as they have to stay at home).
 
 If you use this model, please cite these works:
 - [Abrams, S., Wambua, J., Santermans, E., Willem, L., Kuylen, E., Coletti, P., Libin, P., Faes, C., Petrof, O., Herzog, S., Beutels P., Hens, N. (2021). Modelling the early phase of the Belgian COVID-19 epidemic using a stochastic compartmental model and studying its implied future trajectories. Epidemics, 35, 100449.](https://www.sciencedirect.com/science/article/pii/S1755436521000116?via%3Dihub)
