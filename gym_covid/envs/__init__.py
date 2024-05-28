@@ -114,24 +114,6 @@ class EndPenalty(gym.Wrapper):
             # if slope too high (meaning next wave is coming up), add penalty
             if d_I >= EndPenalty.d_I_limit:
                 r[1] -= EndPenalty.d_I_penalty
-                # print(f'slope : {d_I} too high, adding penalty')
-            # # match all C components, reshape to match C shape
-            # p = np.array([0, 0, 0, 0, 0, 0])[:, None, None]
-            # C_asym = self.env.C*p
-            # C_sym = (C_asym*self.env.C_sym_factor)
-            # I_h = 1
-            # # S_s = s[0][-1, self.env.model.S].sum()
-            # penalty = 0
-            # days = 0
-            # while I_h >= 1:
-            #     s_n = self.env.model.simulate_day(C_asym.sum(axis=0), C_sym.sum(axis=0))
-            #     I_h = np.sum(s_n[self.env.model.I_hosp] + s_n[self.env.model.I_icu])
-            #     penalty += I_h
-            #     # print(days, s_n[self.env.model.I_hosp] + s_n[self.env.model.I_icu])
-            #     days += 1
-            # # S_s_n = s_n[self.env.model.S].sum()
-            # # r[1] -= penalty
-            # # print(f'additional days: {days} \t penalty {penalty}')
         return s, r, t, info
 
 

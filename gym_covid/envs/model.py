@@ -5,37 +5,7 @@ from numba.experimental import jitclass
 from numba import types, jit
 from torch import binomial
 
-# @jitclass([
-#     ('n_comp', types.int32),
-#     ('S', types.int32),
-#     ('E', types.int32),
-#     ('I_asym', types.int32),
-#     ('I_mild', types.int32),
-#     ('I_sev', types.int32),
-#     ('I_hosp', types.int32),
-#     ('I_icu', types.int32),
-#     ('R', types.int32),
-#     ('D', types.int32),
-#     ('I_hosp_new', types.int32),
-#     ('I_icu_new', types.int32),
-#     ('D_new', types.int32),
-#     ('q_asym', types.float64),
-#     ('q_sym', types.float64),
-#     ('gamma', types.float64),
-#     ('theta', types.float64),
-#     ('p', types.float64[:]),
-#     ('delta1', types.float64),
-#     ('delta2', types.float64[:]),
-#     ('delta3', types.float64[:]),
-#     ('delta4', types.float64[:]),
-#     ('psi', types.float64[:]),
-#     ('omega', types.float64[:]),
-#     ('phi1', types.float64[:]),
-#     ('tau1', types.float64[:]),
-#     ('tau2', types.float64[:]),
-#     ('init_state', types.float64[:, :]),
-#     ('current_state', types.float64[:, :]),
-# ])
+
 class EpiModel(object):
     # variable types
     n_comp: int
