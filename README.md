@@ -120,6 +120,13 @@ This is implemented as a wrapper, on top of the original MOMDP. This modifies th
 
 You can install this environment by cloning the repository and using `pip`. It requires Python3.7+
 Additionally, we are using `numba` to improve the performance of the Binomial model.
+! This repo uses the openai version of gym, before Farama foundation. It requires `gym==0.21.0`:
+```
+pip install setuptools==65.5.0 pip==21  # gym 0.21 installation is broken with more recent versions
+pip install wheel==0.38.0
+pip install gym==0.21.0
+```
+
 
 ```
 pip install .
