@@ -56,6 +56,7 @@ class EpiModel(object):
         cases = all_cases[all_cases['DATE'] >= '2020-03-01']
         cases = cases[cases['DATE'] < '2020-03-14']
         age_cases = cases.groupby('AGEGROUP').agg(np.sum)
+        age_cases = age_cases['CASES']
         rel_age_cases = age_cases/age_cases.sum()
         rel_freq = rel_age_cases.values.flatten()
 
@@ -63,9 +64,10 @@ class EpiModel(object):
         cases = all_cases[all_cases['DATE'] >= '2020-03-01']
         cases = cases[cases['DATE'] < '2020-03-13']
         age_cases = cases.groupby('AGEGROUP').agg(np.sum)
+        age_cases = age_cases['CASES']
         rel_age_cases = age_cases/age_cases.sum()
         rel_age_cases = rel_age_cases.values
-        n0 = age_cases.sum()[0]
+        n0 = age_cases.sum()
 
         # CREATE S, E
         pop = pd.read_csv(config['population'])
