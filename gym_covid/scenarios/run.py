@@ -54,6 +54,10 @@ def simulate_scenario(env, scenario):
     ret = 0
     # at start of simulation, no restrictions are applied
     action = np.ones(3)
+    actions = []
+    rewards = []
+    today = datetime.date(2020, 3, 1)
+    days = []
 
     while not d:
         # at every timestep check if there are new restrictions
@@ -68,11 +72,31 @@ def simulate_scenario(env, scenario):
         states.append(s[1])
         timestep += 1
         ret += r
+        actions.append(action)
+        rewards.append(r)
+        for i in range(7):
+            days.append(datetime.date(2020, 3, 1)+datetime.timedelta(days=(timestep-1)*7+i))
     # array of shape [Week DayOfWeek Compartment AgeGroup]
-    states = np.array(states)
+
+    states = np.stack(states, 0)
     print(ret)
     # reshape to [Day Compartment AgeGroup]
-    return np.array(states).reshape(states.shape[0]*states.shape[1], *states.shape[2:])
+    states =  np.array(states).reshape(states.shape[0]*states.shape[1], *states.shape[2:])
+
+    with open('/tmp/run.csv', 'a') as f:
+        f.write('dates,i_hosp_new,i_icu_new,d_new,p_w,p_s,p_l')
+        i_hosp_new = states[:,-3].sum(axis=1)
+        i_icu_new = states[:,-2].sum(axis=1)
+        d_new = states[:,-1].sum(axis=1)
+        # actions.append(actions[-1])
+        actions = np.array(actions)
+        rewards = np.stack(rewards, 0)
+        actions = actions.repeat(7, 0)
+        rewards = rewards.repeat(7, 0)
+        for i in range(len(i_hosp_new)):
+            f.write(f'{days[i]},{i_hosp_new[i]},{i_icu_new[i]},{d_new[i]},{actions[i][0]},{actions[i][1]},{actions[i][2]}\n')
+
+    return states
 
 
 if __name__ == '__main__':
