@@ -102,7 +102,7 @@ We provide 2 variants of the MDPs:
 ________________
 Finally, the measures take time to be applied. This is modelled by a *gradual compliance* logistic function. Full compliance is estimated to occur after 6 days. Thus, after each timestep (which is one week), population is fully compliant and the *gradual compliance* has no effect on the Markov property of our MDP. You can easily change the number of simulated days per timestep, but be aware this may affect your MDP.
 
-## Rewards
+### Rewards
 
 At each timestep, the environment also provides a reward. We propose a **Multi-objective** reward, to analyze the different aspects that are affected by government policies.
 We have 3 objectives, that are defined as costs:
@@ -110,9 +110,16 @@ We have 3 objectives, that are defined as costs:
  - newly hospitalized: `-Sum(state_hosp_new + state_icu_new)`
  - a simple proxy for social burden. We see this a the loss in contacts compared to business-as-usual
 
+## Budget
+
+In the default setting, the agent is allowed to change the social restrictions at every timestep, on a weekly basis. This assumption might not be realistic. To learn realistic and consistent mitigation policies, we introduce a _budget_ regarding the number of times a policy can change its actions until the terminal state of the MOMDP is reached. Concretely, when the action changes, i.e., if the social restriction proposed by the policy is different from the one that is currently in place, we reduce the budget by one. We only allow action changes as long as there is budget left.
+
+This is implemented as a wrapper, on top of the original MOMDP. This modifies the returned state from a 3-sized tuple to a 4-sized tuple, where the first component is a vector containing the budget left for each action, and the other components are the same as the original state.
+
 ## Installation
 
 You can install this environment by cloning the repository and using `pip`. It requires Python3.7+
+Additionally, we are using `numba` to improve the performance of the Binomial model.
 
 ```
 pip install .
@@ -120,7 +127,7 @@ pip install .
 
 The different environments are named as follows:
 ```
-BECovid<WithLockdown|><ODE|Binomial><Discrete|Continuous>-v0
+BECovid<WithLockdown|><ODE|Binomial><Budget2|...|Budget5|><Discrete|Continuous>-v0
 ```
 
 To create an environment:
