@@ -1,4 +1,7 @@
 # gym_covid
+
+This gym environment was used to learn the Pareto front of COVID-19 exit strategies (Reymond et al., 2024) using the PCN algorithm. PCN was adapted to deal with environments with continuous actions and stochastic model transitions. The updated PCN algorithm and code to reproduce the experiments in Reymond et al. (2024) can be found here: https://github.com/mathieu-reymond/pcn-covid.
+
 ## A gym environment for a compartment model modelling the first COVID wave in Belgium.
 
 A Python implementation of the COVID model by Abrams et al. (2021). This is a compartment model used to analyse the first wave of COVID that occured in Belgium starting from 01 March 2020. It explicitly models hospitalizations and ICU-hospitalizations, as well as contact-reduction for symptomatic people (as they have to stay at home).
