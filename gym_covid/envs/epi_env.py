@@ -3,6 +3,8 @@ import gym
 from gym.spaces import Box
 import datetime
 
+from gym_covid.envs.model import BinomialModel, ODEModel
+
 
 def gradual_compliance_weights(t, beta_0, beta_1):
     x = beta_0 + beta_1*t
@@ -79,7 +81,14 @@ class EpiEnv(gym.Env):
 
         # simulate for a whole week, sum the daily rewards
         r_ari = r_arh = r_sr = 0.
-        state_n = np.empty((self.days_per_timestep,) + self.observation_space.shape)
+
+        # the binomial model uses integers, the ODE model uses floats.
+        if isinstance(self.model, ODEModel):
+            state_n = np.empty((self.days_per_timestep,) + self.observation_space.shape)
+        elif isinstance(self.model, BinomialModel):
+            state_n = np.empty((self.days_per_timestep,) + self.observation_space.shape, dtype=np.integer)
+        else:
+            raise ValueError(f"Error: unsupported model type '{type(self.model)}'")
         event_n = np.zeros((self.days_per_timestep, 1), dtype=bool)
         for day in range(self.days_per_timestep):
             # every day check if there are events on the calendar
