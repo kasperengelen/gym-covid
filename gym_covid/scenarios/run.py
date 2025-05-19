@@ -27,10 +27,12 @@ def plot_states(states, alpha):
 def plot_simulation(states_per_stoch_run, ode_states, datapoints=None):
     _, axs = plt.subplots(2, 1)
 
+    # these are the colored lines that indicate the compartment values
     for states in states_per_stoch_run:
         plot_states(states, 0.2)
     plot_states(ode_states, 1.)
 
+    # these are the dots on the plot
     if datapoints is not None:
         h = datapoints['hospitalizations']
         axs[0].scatter(np.arange(len(h)), h, facecolors='none', edgecolors='black')
