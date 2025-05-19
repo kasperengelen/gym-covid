@@ -35,11 +35,12 @@ setup(
         'gym_covid': data_files
     },
     install_requires=[
-        'gym',
+        'gym<=0.21.0',
         'pandas',
         'importlib_resources',
         'scipy',
         'matplotlib',
-        'numba'
+        'numba',
+        'torch'
     ]
 )

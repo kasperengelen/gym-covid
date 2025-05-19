@@ -1,0 +1,7 @@
+gym<=0.21.0
+pandas
+importlib_resources
+scipy
+matplotlib
+numba
+torch
