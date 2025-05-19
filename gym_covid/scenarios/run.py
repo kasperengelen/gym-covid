@@ -101,7 +101,7 @@ def simulate_scenario(env, scenario):
 
 if __name__ == '__main__':
     import gym
-    import envs
+    from gym_covid import envs
     from gym.wrappers import TimeLimit
     import numpy as np
     
