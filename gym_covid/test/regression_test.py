@@ -1,4 +1,5 @@
 import datetime
+import pickle
 from pathlib import Path
 
 import gym
@@ -10,7 +11,24 @@ import gym_covid
 
 
 def get_test_cases_root():
-    return Path(gym_covid.test.__file__) / "test_cases"
+    return Path(gym_covid.test.__file__).parent / "test_cases"
+
+
+def write_trajectory_to_pickle(traj: np.ndarray, file: Path):
+    """
+        Write the trajectory to the specified pickle file.
+    """
+    with open(file, "wb") as f:
+        pickle.dump(traj, f)
+
+
+def read_trajectory_from_pickle(file: Path):
+    """
+        Read the trajectory from the specified pickle file.
+    """
+    with open(file, "rb") as f:
+        traj = pickle.load(f)
+        return traj
 
 
 def simulate_scenario(env, scenario):
@@ -46,52 +64,64 @@ def simulate_scenario(env, scenario):
     # array of shape [Week DayOfWeek Compartment AgeGroup]
 
     states = np.stack(states, 0)
-    print(ret)
     # reshape to [Day Compartment AgeGroup]
     states = np.array(states).reshape(states.shape[0]*states.shape[1], *states.shape[2:])
 
     return states
 
+#
+# def test_regression_bin():
+#     """
+#         Small test to verify that the numerical outputs of the model are unchanged w.r.t. an earlier reference point.
+#
+#         This test s the "BECovidBinomialContinuous-v0" model, with seed "22122021" and a single run. The code
+#         for this test is taken from the "scenarios/run.py" file.
+#
+#         The scenario CSV is located in "test/test_cases" and is identical to the "scenarios/baseline.csv" file.
+#     """
+#     np.random.seed(seed=22122021)
+#
+#     # load the environments
+#     bin_env = gym.make('BECovidBinomialContinuous-v0')
+#     days_per_timestep = bin_env.days_per_timestep
+#     runs = 1
+#
+#     # simulation timesteps in weeks
+#     start = datetime.date(2020, 3, 1)
+#     end = datetime.date(2020, 9, 5)
+#     timesteps = round((end - start).days / days_per_timestep)
+#
+#     # apply timestep limit to environments
+#     bin_env = TimeLimit(bin_env, timesteps)
+#
+#     # load scenario and convert phase-dates to timesteps
+#     scenario_path = get_test_cases_root() / "baseline.csv"
+#     scenario = pd.read_csv(scenario_path)
+#     scenario['date'] = scenario['date'].astype(str)
+#     to_timestep = lambda d: round((datetime.datetime.strptime(d, '%Y-%m-%d').date() - start).days / days_per_timestep)
+#     scenario['timestep'] = [to_timestep(d) for d in scenario['date']]
+#     print(scenario)
+#
+#     # states_per_run = []
+#     # for run in range(runs):
+#     #     states = simulate_scenario(bin_env, scenario)
+#     #     states_per_run.append(states)
 
-def test_regression_bin():
-    """
-        Small test to verify that the numerical outputs of the model are unchanged w.r.t. an earlier reference point.
 
-        This test s the "BECovidBinomialContinuous-v0" model, with seed "22122021" and a single run. The code
-        for this test is taken from the "scenarios/run.py" file.
 
-        The scenario CSV is located in "test/test_cases" and is identical to the "scenarios/baseline.csv" file.
-    """
-    np.random.seed(seed=22122021)
 
-    # load the environments
-    bin_env = gym.make('BECovidBinomialContinuous-v0')
-    days_per_timestep = bin_env.days_per_timestep
-    runs = 1
+    # Shape = [Days, Compartments, AgeGroups]
+    states = simulate_scenario(bin_env, scenario)
+    # ode_states = simulate_scenario(ode_env, scenario)
 
-    # simulation timesteps in weeks
-    start = datetime.date(2020, 3, 1)
-    end = datetime.date(2020, 9, 5)
-    timesteps = round((end - start).days / days_per_timestep)
+    pickle_path = get_test_cases_root() / "baseline_seed=22122021_bin.pickle"
+    # write_trajectory_to_pickle(traj=states, file=pickle_path)
+    reference = read_trajectory_from_pickle(file=pickle_path)
 
-    # apply timestep limit to environments
-    bin_env = TimeLimit(bin_env, timesteps)
-
-    # load scenario and convert phase-dates to timesteps
-    scenario_path = get_test_cases_root() / "baseline.csv"
-    scenario = pd.read_csv(scenario_path)
-    scenario['date'] = scenario['date'].astype(str)
-    to_timestep = lambda d: round((datetime.datetime.strptime(d, '%Y-%m-%d').date() - start).days / days_per_timestep)
-    scenario['timestep'] = [to_timestep(d) for d in scenario['date']]
-    print(scenario)
-
-    states_per_run = []
-    for run in range(runs):
-        states = simulate_scenario(bin_env, scenario)
-        states_per_run.append(states)
-
-    # TODO: store states_per_run, ode_states, bin_env.datapoints in pickle
-    # plot_simulation(states_per_run, ode_states, bin_env.datapoints)
+    for day in range(states.shape[0]):
+        for compartment in range(states.shape[1]):
+            # check that all age groups are the same
+            assert np.allclose(states[day, compartment], reference[day, compartment]), f"Error: mismatch in compartment '{compartment}' on day '{day}'"
 
 
 def test_regression_ode():
@@ -120,14 +150,21 @@ def test_regression_ode():
 
     # load scenario and convert phase-dates to timesteps
     scenario_path = get_test_cases_root() / "baseline.csv"
+    assert scenario_path.is_file(), "Error: missing scenario CSV file"
     scenario = pd.read_csv(scenario_path)
     scenario['date'] = scenario['date'].astype(str)
     to_timestep = lambda d: round((datetime.datetime.strptime(d, '%Y-%m-%d').date() - start).days / days_per_timestep)
     scenario['timestep'] = [to_timestep(d) for d in scenario['date']]
-    print(scenario)
 
     # plots assume 3 compartments
+    # Shape = [Days, Compartments, AgeGroups]
     ode_states = simulate_scenario(ode_env, scenario)
 
-    # TODO: store states_per_run, ode_states, bin_env.datapoints in pickle
-    # plot_simulation(states_per_run, ode_states, bin_env.datapoints)
+    pickle_path = get_test_cases_root() / "baseline_seed=22122021_ode.pickle"
+    # write_trajectory_to_pickle(traj=ode_states, file=pickle_path)
+    reference = read_trajectory_from_pickle(file=pickle_path)
+
+    for day in range(ode_states.shape[0]):
+        for compartment in range(ode_states.shape[1]):
+            # check that all age groups are the same
+            assert np.allclose(ode_states[day, compartment], reference[day, compartment]), f"Error: mismatch in compartment '{compartment}' on day '{day}'"
