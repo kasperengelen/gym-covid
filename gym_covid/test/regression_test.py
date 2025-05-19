@@ -112,7 +112,6 @@ def test_regression_bin():
 
     # Shape = [Days, Compartments, AgeGroups]
     states = simulate_scenario(bin_env, scenario)
-    # ode_states = simulate_scenario(ode_env, scenario)
 
     # retrieve reference
     pickle_path = get_test_cases_root() / "baseline_seed=22122021_bin.pickle"
