@@ -1,5 +1,8 @@
 import sys
 import os
+
+from numba import jit
+
 sys.path.append(os.getcwd())
 import matplotlib.pyplot as plt
 import argparse
@@ -83,7 +86,7 @@ def simulate_scenario(env, scenario):
     states = np.stack(states, 0)
     print(ret)
     # reshape to [Day Compartment AgeGroup]
-    states =  np.array(states).reshape(states.shape[0]*states.shape[1], *states.shape[2:])
+    states = np.array(states).reshape(states.shape[0]*states.shape[1], *states.shape[2:])
 
     with open('/tmp/run.csv', 'a') as f:
         f.write('dates,i_hosp_new,i_icu_new,d_new,p_w,p_s,p_l')
@@ -99,6 +102,14 @@ def simulate_scenario(env, scenario):
             f.write(f'{days[i]},{i_hosp_new[i]},{i_icu_new[i]},{d_new[i]},{actions[i][0]},{actions[i][1]},{actions[i][2]}\n')
 
     return states
+
+
+@jit(nopython=True)
+def set_seed_numba(seed):
+    """
+        Set the seed used by numba.
+    """
+    np.random.seed(seed)
 
 
 if __name__ == '__main__':
@@ -118,6 +129,7 @@ if __name__ == '__main__':
     runs = args.runs
 
     np.random.seed(seed=args.seed)
+    set_seed_numba(seed=args.seed)  # for numba we need to set the seed in a JIT-compiled context as well.
 
     # load the environments
     bin_env = gym.make('BECovidBinomialContinuous-v0')
