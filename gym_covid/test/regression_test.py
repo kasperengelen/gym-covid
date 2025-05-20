@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from gym.wrappers import TimeLimit
 from numba import jit
+import json_numpy
 
 import gym_covid
 
@@ -15,20 +16,20 @@ def get_test_cases_root():
     return Path(gym_covid.test.__file__).parent / "test_cases"
 
 
-def write_trajectory_to_pickle(traj: np.ndarray, file: Path):
+def write_traj_to_json(traj: np.ndarray, file: Path):
     """
-        Write the trajectory to the specified pickle file.
+        Write trajectory to a JSON file.
     """
-    with open(file, "wb") as f:
-        pickle.dump(traj, f)
+    with open(file, "w") as f:
+        json_numpy.dump(obj=traj, fp=f)
 
 
-def read_trajectory_from_pickle(file: Path):
+def read_traj_from_json(file: Path):
     """
-        Read the trajectory from the specified pickle file.
+        Read trajectory from a JSON file.
     """
-    with open(file, "rb") as f:
-        traj = pickle.load(f)
+    with open(file, "r") as f:
+        traj = json_numpy.load(f)
         return traj
 
 
@@ -114,9 +115,9 @@ def test_regression_bin():
     states = simulate_scenario(bin_env, scenario)
 
     # retrieve reference
-    pickle_path = get_test_cases_root() / "baseline_seed=22122021_bin.pickle"
-    # write_trajectory_to_pickle(traj=states, file=pickle_path)
-    reference = read_trajectory_from_pickle(file=pickle_path)
+    json_path = get_test_cases_root() / "baseline_seed=22122021_bin.json"
+    # write_traj_to_json(traj=states, file=json_path)
+    reference = read_traj_from_json(file=json_path)
 
     # compare every compartment at every day
     for day in range(states.shape[0]):
@@ -163,9 +164,9 @@ def test_regression_ode():
     ode_states = simulate_scenario(ode_env, scenario)
 
     # get reference data
-    pickle_path = get_test_cases_root() / "baseline_seed=22122021_ode.pickle"
-    # write_trajectory_to_pickle(traj=ode_states, file=pickle_path)
-    reference = read_trajectory_from_pickle(file=pickle_path)
+    json_path = get_test_cases_root() / "baseline_seed=22122021_ode.json"
+    # write_traj_to_json(traj=ode_states, file=json_path)
+    reference = read_traj_from_json(file=json_path)
 
     # compare every compartment at every day
     for day in range(ode_states.shape[0]):
