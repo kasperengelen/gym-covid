@@ -1,3 +1,5 @@
+from typing import Any
+
 import numpy as np
 import gymnasium
 from gymnasium.spaces import Box
@@ -61,8 +63,8 @@ class EpiEnv(gymnasium.Env):
                 day = holiday_start+datetime.timedelta(days=i)
                 self.events[day] = school_holidays
 
-    def reset(self):
-        # TODO: this method should take an argument "seed" and an arg called "options"
+    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None):
+        super(EpiEnv, self).reset(seed=seed, options=options)
         self.model.current_state = self.model.init_state.copy()
         self.current_C = self.C
         self.today = datetime.date(2020, 3, 1)

@@ -41,7 +41,8 @@ def set_seed_numba(seed):
 def simulate_scenario(env, scenario):
     states = []
     s = env.reset()
-    d = False
+    d = False  # final state reached
+    trunc = False  # time limit reached
     timestep = 0
     ret = 0
     # at start of simulation, no restrictions are applied
@@ -51,7 +52,7 @@ def simulate_scenario(env, scenario):
     today = datetime.date(2020, 3, 1)
     days = []
 
-    while not d:
+    while not (d or trunc):
         # at every timestep check if there are new restrictions
         s = scenario[scenario['timestep'] == timestep]
         if len(s):
@@ -59,7 +60,7 @@ def simulate_scenario(env, scenario):
             # found new restrictions
             action = np.array([s['work'].iloc[0], s['school'].iloc[0], s['leisure'].iloc[0]])
 
-        s, r, d, info = env.step(action)
+        s, r, d, trunc, info = env.step(action)
         # state is tuple (compartments, events, prev_action), only keep compartments
         states.append(s[1])
         timestep += 1
@@ -92,7 +93,7 @@ def test_regression_bin():
 
     # load the environments
     bin_env = gymnasium.make('BECovidBinomialContinuous-v0')
-    days_per_timestep = bin_env.days_per_timestep
+    days_per_timestep = 7
     runs = 1
 
     # simulation timesteps in weeks
@@ -109,7 +110,6 @@ def test_regression_bin():
     scenario['date'] = scenario['date'].astype(str)
     to_timestep = lambda d: round((datetime.datetime.strptime(d, '%Y-%m-%d').date() - start).days / days_per_timestep)
     scenario['timestep'] = [to_timestep(d) for d in scenario['date']]
-    print(scenario)
 
     # Shape = [Days, Compartments, AgeGroups]
     states = simulate_scenario(bin_env, scenario)
@@ -140,7 +140,7 @@ def test_regression_ode():
 
     # load the environments
     ode_env = gymnasium.make('BECovidODEContinuous-v0')
-    days_per_timestep = ode_env.days_per_timestep
+    days_per_timestep = 7
     runs = 1
 
     # simulation timesteps in weeks

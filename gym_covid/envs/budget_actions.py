@@ -1,3 +1,5 @@
+from typing import Any
+
 import gymnasium
 import numpy as np
 
@@ -17,10 +19,10 @@ class BudgetActionWrapper(gymnasium.Wrapper):
             state = (self._budget_left.copy(), state)
         return state
 
-    def reset(self):
+    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None):
         self._budget_left = np.full_like(self.action_space.low, self._budget)
         self._last_action = np.full_like(self.action_space.low, -np.inf)
-        s = super(BudgetActionWrapper, self).reset()
+        s = super(BudgetActionWrapper, self).reset(seed=seed, options=options)
         return self.augment_state(s)
 
     def step(self, raw_action):

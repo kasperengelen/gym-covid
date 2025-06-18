@@ -1,3 +1,5 @@
+from typing import Any
+
 import gymnasium
 import datetime
 import numpy as np
@@ -18,16 +20,16 @@ class Lockdown(gymnasium.Wrapper):
         # lockdown policy
         self.lockdown_policy = np.array([0.2, 0.0, 0.1])
 
-    def reset(self):
+    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None):
         # reset base-env
-        s = super(Lockdown, self).reset()
+        s = super(Lockdown, self).reset(seed=seed, options=options)
         # action under no restrictions
         action = np.ones(3)
         # let first wave pass under lockdown, start-state is start of exit strategy
         for t in range(self.lockdown_end):
             if t == self.lockdown_start:
                 action = self.lockdown_policy
-            s, _, _, _ = self.env.step(action)
+            s, _, _, _, _ = self.env.step(action)
         return s
 
 
