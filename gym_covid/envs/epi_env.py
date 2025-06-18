@@ -1,6 +1,6 @@
 import numpy as np
-import gym
-from gym.spaces import Box
+import gymnasium
+from gymnasium.spaces import Box
 import datetime
 
 from gym_covid.envs.model import BinomialModel, ODEModel
@@ -21,7 +21,7 @@ def school_holidays(C, C_current, C_target):
     return C, C_current, C_target
 
 
-class EpiEnv(gym.Env):
+class EpiEnv(gymnasium.Env):
 
     def __init__(self, model, C=None, beta_0=None, beta_1=None, datapoints=None):
         super(EpiEnv, self).__init__()
@@ -62,12 +62,14 @@ class EpiEnv(gym.Env):
                 self.events[day] = school_holidays
 
     def reset(self):
+        # TODO: this method should take an argument "seed" and an arg called "options"
         self.model.current_state = self.model.init_state.copy()
         self.current_C = self.C
         self.today = datetime.date(2020, 3, 1)
         # check for events on this day
         event = self.today in self.events
-        return self.model.current_state, event
+        # NOTE: intead of returning a boolean, this returns now a dictionary with a boolean inside it.
+        return self.model.current_state, {"has_event": event}
 
     def step(self, action):
         # action is a 3d continuous vector
@@ -136,6 +138,7 @@ class EpiEnv(gym.Env):
         r_sr_s = r_sr[3]
         r_sr_l = r_sr[4]+r_sr[5]
 
-        # next-state , reward, terminal?, info
+        # next-state , reward, terminal?, truncated, info
         # provide action as proxy for current SCM, impacts progression of epidemic
-        return (state_n, event_n, action.copy()), np.array([r_ari, r_arh, r_sr_w, r_sr_s, r_sr_l]), False, {}
+        # NOTE: recent versions of gym require a "truncated" return value. I set this to return False.
+        return (state_n, event_n, action.copy()), np.array([r_ari, r_arh, r_sr_w, r_sr_s, r_sr_l]), False, False, {}

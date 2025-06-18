@@ -2,10 +2,10 @@ import datetime
 import pickle
 from pathlib import Path
 
-import gym
+import gymnasium
 import numpy as np
 import pandas as pd
-from gym.wrappers import TimeLimit
+from gymnasium.wrappers import TimeLimit
 from numba import jit
 import json_numpy
 
@@ -91,7 +91,7 @@ def test_regression_bin():
     set_seed_numba(seed=22122021)
 
     # load the environments
-    bin_env = gym.make('BECovidBinomialContinuous-v0')
+    bin_env = gymnasium.make('BECovidBinomialContinuous-v0')
     days_per_timestep = bin_env.days_per_timestep
     runs = 1
 
@@ -139,7 +139,7 @@ def test_regression_ode():
     np.random.seed(seed=22122021)
 
     # load the environments
-    ode_env = gym.make('BECovidODEContinuous-v0')
+    ode_env = gymnasium.make('BECovidODEContinuous-v0')
     days_per_timestep = ode_env.days_per_timestep
     runs = 1
 

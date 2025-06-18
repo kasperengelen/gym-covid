@@ -1,9 +1,9 @@
-import gym
+import gymnasium
 import datetime
 import numpy as np
 
 
-class Lockdown(gym.Wrapper):
+class Lockdown(gymnasium.Wrapper):
 
     def __init__(self, env):
         super(Lockdown, self).__init__(env)
@@ -33,8 +33,8 @@ class Lockdown(gym.Wrapper):
 
 if __name__ == '__main__':
     import gym_covid.envs
-    env = gym.make('EpiBelgiumODEContinuous-v0')
-    env = gym.wrappers.TimeLimit(env, 27)
+    env = gymnasium.make('EpiBelgiumODEContinuous-v0')
+    env = gymnasium.wrappers.TimeLimit(env, 27)
     env = Lockdown(env)
     env.reset()
     d = False
@@ -42,5 +42,5 @@ if __name__ == '__main__':
     while not d:
         print(t)
         t += 1
-        s, _, d, _ = env.step(np.array([0.3,0,0.2]))
+        s, _, d, _, _ = env.step(np.array([0.3,0,0.2]))
     print(s[-1, 0])

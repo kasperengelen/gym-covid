@@ -1,8 +1,8 @@
-import gym
+import gymnasium
 import numpy as np
 
 
-class BudgetActionWrapper(gym.Wrapper):
+class BudgetActionWrapper(gymnasium.Wrapper):
 
     def __init__(self, env, budget=5) -> None:
         super(BudgetActionWrapper, self).__init__(env)

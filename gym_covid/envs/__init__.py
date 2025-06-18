@@ -1,5 +1,5 @@
-from gym.envs.registration import register
-from gym.wrappers import TimeLimit
+from gymnasium.envs.registration import register
+from gymnasium.wrappers import TimeLimit
 from gym_covid.envs.model import ODEModel, BinomialModel
 from gym_covid.envs.epi_env import EpiEnv
 from gym_covid.envs.discrete_actions import DiscreteAction
@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 from importlib_resources import files, as_file
 import datetime
-import gym
+import gymnasium
 
 
 def be_config():
@@ -64,7 +64,7 @@ def be_binomial():
     return env
 
 
-class TimestepsLeft(gym.ObservationWrapper):
+class TimestepsLeft(gymnasium.ObservationWrapper):
 
     def observation(self, observation):
         # assume useage of TimeLimit
@@ -97,12 +97,12 @@ def discretize_actions(env, work=None, school=None, leisure=None):
     return DiscreteAction(env, actions)
 
 
-class EndPenalty(gym.Wrapper):
+class EndPenalty(gymnasium.Wrapper):
     d_I_limit = 1
     d_I_penalty = 1e4
 
     def step(self, action):
-        s, r, t, info = super(EndPenalty, self).step(action)
+        s, r, t, trunc, info = super(EndPenalty, self).step(action)
         # if terminal, continue executing with no social contact for penalty
         if t:
             I = s[0][:, self.env.model.I_hosp] + s[0][:, self.env.model.I_icu]
@@ -114,7 +114,8 @@ class EndPenalty(gym.Wrapper):
             # if slope too high (meaning next wave is coming up), add penalty
             if d_I >= EndPenalty.d_I_limit:
                 r[1] -= EndPenalty.d_I_penalty
-        return s, r, t, info
+        # NOTE: add the "trunc" return value. This simply passes it along.
+        return s, r, t, trunc, info
 
 
 
