@@ -24,6 +24,7 @@ def plot_states(states, alpha):
     ax.plot(i_icu_new,  alpha=alpha, label='icu', color='green')
     ax.plot(i_hosp_new+i_icu_new, label='hosp+icu',
             alpha=alpha, color='orange')
+    ax.legend(loc="best")
 
     # deaths
     ax = axs[1]
@@ -53,6 +54,7 @@ def plot_simulation(states_per_stoch_run, ode_states, datapoints=None):
     axs[1].set_xlabel('days')
     axs[1].set_ylabel('deaths')
 
+    plt.legend(loc="best")
     plt.show()
 
 
