@@ -5,3 +5,5 @@ scipy
 matplotlib
 numba
 torch
+pytest
+json_numpy
