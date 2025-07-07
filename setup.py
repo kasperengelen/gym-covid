@@ -21,8 +21,8 @@ setup(
     description='A gym environment for a compartment model modelling the first COVID wave in Belgium.',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    author='Mathieu Reymond, Conor F. Hayes, Pieter Libin',
-    author_email='mathieu.reymond@vub.be',
+    author='Mathieu Reymond, Conor F. Hayes, Pieter Libin, Kasper Engelen, Guillermo A. Perez',
+    author_email='pieter.libin@vub.be',
     # When your source code is in a subdirectory under the project root, e.g.
     # `src/`, it is necessary to specify the `package_dir` argument.
     package_dir={'gym_covid': 'gym_covid'},
@@ -35,12 +35,13 @@ setup(
         'gym_covid': data_files
     },
     install_requires=[
-        'gym<=0.21.0',
+        'gymnasium',
         'pandas',
         'importlib_resources',
         'scipy',
         'matplotlib',
         'numba',
-        'torch'
+        'torch',
+        'json_numpy'
     ]
 )
