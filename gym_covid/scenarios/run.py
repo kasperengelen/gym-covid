@@ -76,7 +76,7 @@ def simulate_scenario(env, scenario):
         # at every timestep check if there are new restrictions
         s = scenario[scenario['timestep'] == timestep]
         if len(s):
-            print(f'timesteps {timestep}: {s["phase"]}')
+            # print(f'timesteps {timestep}: {s["phase"]}')
             # found new restrictions
             action = np.array([s['work'].iloc[0], s['school'].iloc[0],
                                s['leisure'].iloc[0]])
@@ -84,7 +84,7 @@ def simulate_scenario(env, scenario):
         s, r, d, trunc, info = env.step(action)
         # state is tuple (compartments, events, prev_action),
         # only keep compartments
-        states.append(s[1])
+        states.append(s[0])
         timestep += 1
         ret += r
         actions.append(action)
@@ -93,12 +93,13 @@ def simulate_scenario(env, scenario):
             days.append(datetime.date(2020, 3, 1) +
                         datetime.timedelta(days=(timestep-1)*7+i))
     # array of shape [Week DayOfWeek Compartment AgeGroup]
-
     states = np.stack(states, 0)
-    print(ret)
+    # print(f"shape of states 1 = {states.shape}")
+    # print(ret)
     # reshape to [Day Compartment AgeGroup]
     states = np.array(states).reshape(states.shape[0]*states.shape[1],
                                       *states.shape[2:])
+    # print(f"shape of states 2 = {states.shape}")
 
     with open('/tmp/run.csv', 'a') as f:
         f.write('dates,i_hosp_new,i_icu_new,d_new,p_w,p_s,p_l')
@@ -141,7 +142,7 @@ if __name__ == '__main__':
                         help='RNG seed. Default : 22122021')
 
     args = parser.parse_args()
-    print(args)
+    # print(args)
     runs = args.runs
 
     np.random.seed(seed=args.seed)
@@ -154,12 +155,12 @@ if __name__ == '__main__':
 
     # simulation timesteps in weeks
     start = datetime.date(2020, 3, 1)
-    end = datetime.date(2020, 9, 5)
-    timesteps = round((end-start).days/days_per_timestep)
+    #end = datetime.date(2020, 9, 5)
+    #timesteps = round((end-start).days/days_per_timestep)
 
     # apply timestep limit to environments
-    bin_env = TimeLimit(bin_env, timesteps)
-    ode_env = TimeLimit(ode_env, timesteps)
+    #bin_env = TimeLimit(bin_env, timesteps)
+    #ode_env = TimeLimit(ode_env, timesteps)
 
     # load scenario and convert phase-dates to timesteps
     scenario = pd.read_csv(args.scenario)
@@ -170,7 +171,7 @@ if __name__ == '__main__':
                      .date()-start).days/days_per_timestep)
 
     scenario['timestep'] = [to_timestep(d) for d in scenario['date']]
-    print(scenario)
+    # print(scenario)
 
     states_per_run = []
     for run in range(runs):

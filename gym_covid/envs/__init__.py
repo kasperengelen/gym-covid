@@ -116,7 +116,6 @@ def create_env(env_type='ODE', discrete_actions=False, simulate_lockdown=True, u
         env = be_ode()
     else:
         env = be_binomial()
-    print("MORE", until)
     # set timelimit
     if until is not None:
         env = until(env)

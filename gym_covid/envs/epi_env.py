@@ -41,10 +41,16 @@ class EpiEnv(gymnasium.Env):
         self.C_sym_factor = np.array([1., 0.09, 0.13,
                                       0.09, 0.06, 0.25])[:, None, None]
         self.C_full = self.C.copy()
+        self.days_per_timestep = 7
 
         self.beta_0 = beta_0
         self.beta_1 = beta_1
-        self.days_per_timestep = 7
+        if isinstance(self.model, ODEModel):
+            ptype = np.float64
+        elif isinstance(self.model, BinomialModel):
+            ptype = np.int64
+        else:
+            raise ValueError(f"Error: unsupported model type '{type(self.model)}'")
 
         # action space is proportional reduction of work, school, leisure
         self.action_space = Box(low=np.zeros(3), high=np.ones(3),
@@ -57,16 +63,11 @@ class EpiEnv(gymnasium.Env):
             Box(low=np.zeros((self.days_per_timestep, model.n_comp, self.K)),
                 high=np.tile(N,  # FIXME: pop. not preserved!
                              (self.days_per_timestep, model.n_comp, 1)),
-                dtype=np.int64),
+                dtype=ptype),
             Box(low=np.tile(False, (self.days_per_timestep, 1)),
                 high=np.tile(True, (self.days_per_timestep, 1)),
                 dtype=np.bool),
             Box(low=np.zeros(3), high=np.ones(3), dtype=np.float64)])
-        # reward_space is attack-rate for infections,
-        # hospitalizations and reduction in social contact
-        self.reward_space = Box(low=np.zeros(3), high=np.array([N.sum(),
-                                                                N.sum(), 1]),
-                                dtype=np.float64)
 
         self.datapoints = datapoints
         self.today = datetime.date(2020, 3, 1)
@@ -98,7 +99,7 @@ class EpiEnv(gymnasium.Env):
                np.tile(False, (self.days_per_timestep, 1)),
                np.zeros(3)),  {"has_event": event}
         o, i = res
-        print(f"size of reset obs = {len(o)}")
+        # print(f"size of reset obs = {len(o)}")
         return res
 
     def step(self, action):
@@ -116,9 +117,13 @@ class EpiEnv(gymnasium.Env):
 
         # the binomial model uses integers, the ODE model uses floats.
         if isinstance(self.model, ODEModel):
-            state_n = np.empty((self.days_per_timestep,) + self.observation_space.shape)
+            state_n = np.empty((self.days_per_timestep,
+                                self.model.n_comp,
+                                self.K), dtype=np.float64)
         elif isinstance(self.model, BinomialModel):
-            state_n = np.empty((self.days_per_timestep,) + self.observation_space.shape, dtype=np.integer)
+            state_n = np.empty((self.days_per_timestep,
+                                self.model.n_comp,
+                                self.K), dtype=np.int64)
         else:
             raise ValueError(f"Error: unsupported model type '{type(self.model)}'")
         event_n = np.zeros((self.days_per_timestep, 1), dtype=bool)
@@ -167,8 +172,15 @@ class EpiEnv(gymnasium.Env):
         r_sr_w = r_sr[1]+r_sr[2]
         r_sr_s = r_sr[3]
         r_sr_l = r_sr[4]+r_sr[5]
+        # the reward is the attack-rate for infections,
+        # hospitalizations and reduction in social contact
+        # we aggregate all of this with a magical formula
+        rew = (0.3 * r_ari + 0.4 * r_arh  # hospitalized > infectious
+               + 0.2 * r_sr_w  # schools > work, leisure
+               + 0.3 * r_sr_s  # social contact <= attack rate
+               + 0.2 * r_sr_l)
 
         # next-state , reward, terminal?, truncated, info
         # provide action as proxy for current SCM, impacts progression of epidemic
         # NOTE: recent versions of gym require a "truncated" return value. I set this to return False.
-        return (state_n, event_n, action.copy()), np.array([r_ari, r_arh, r_sr_w, r_sr_s, r_sr_l]), False, False, {}
+        return (state_n, event_n, action.copy()), rew, False, False, {}
