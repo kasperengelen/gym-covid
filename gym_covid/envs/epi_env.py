@@ -175,10 +175,10 @@ class EpiEnv(gymnasium.Env):
         # the reward is the attack-rate for infections,
         # hospitalizations and reduction in social contact
         # we aggregate all of this with a magical formula
-        rew = (0.3 * r_ari + 0.4 * r_arh  # hospitalized > infectious
-               + 0.2 * r_sr_w  # schools > work, leisure
-               + 0.3 * r_sr_s  # social contact <= attack rate
-               + 0.2 * r_sr_l)
+        rew = (3 * r_ari + 4 * r_arh  # hospitalized > infectious
+               + 0.02 * r_sr_w  # schools > work, leisure
+               + 0.03 * r_sr_s  # social contact << attack rate
+               + 0.02 * r_sr_l)
 
         # next-state , reward, terminal?, truncated, info
         # provide action as proxy for current SCM, impacts progression of epidemic
