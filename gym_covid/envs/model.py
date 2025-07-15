@@ -1,9 +1,9 @@
 import numpy as np
 from scipy.integrate import odeint
 import pandas as pd
-from numba.experimental import jitclass
-from numba import types, jit
-from torch import binomial
+# from numba.experimental import jitclass
+from numba import jit  # , types
+# from torch import binomial
 
 
 class EpiModel(object):
@@ -55,7 +55,7 @@ class EpiModel(object):
         # !! for some reason, the rel_freq and n0 where computed using 1-day difference in original paper-code
         cases = all_cases[all_cases['DATE'] >= '2020-03-01']
         cases = cases[cases['DATE'] < '2020-03-14']
-        age_cases = cases.groupby('AGEGROUP').agg(np.sum)
+        age_cases = cases.groupby('AGEGROUP').agg('sum')
         age_cases = age_cases['CASES']
         rel_age_cases = age_cases/age_cases.sum()
         rel_freq = rel_age_cases.values.flatten()
@@ -63,7 +63,7 @@ class EpiModel(object):
         # n0 is based on age-cases
         cases = all_cases[all_cases['DATE'] >= '2020-03-01']
         cases = cases[cases['DATE'] < '2020-03-13']
-        age_cases = cases.groupby('AGEGROUP').agg(np.sum)
+        age_cases = cases.groupby('AGEGROUP').agg('sum')
         age_cases = age_cases['CASES']
         rel_age_cases = age_cases/age_cases.sum()
         rel_age_cases = rel_age_cases.values
@@ -75,7 +75,7 @@ class EpiModel(object):
         age_groups = np.concatenate((np.arange(0, 100, 10), (np.inf,)))
         g = pd.cut(pop.age, age_groups, right=False)
         pop['group'] = g
-        population = pop.groupby('group').agg('sum').population.values.flatten()
+        population = pop.groupby('group', observed=False).agg('sum').population.values.flatten()
 
         imported_cases = np.round(rel_freq*n0*(1/(1-np.array(config['p']))),0)
         S = population - imported_cases

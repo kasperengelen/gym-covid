@@ -2,7 +2,7 @@ from typing import Any
 
 import numpy as np
 import gymnasium
-from gymnasium.spaces import Box
+from gymnasium.spaces import Box, Tuple
 import datetime
 
 from gym_covid.envs.model import BinomialModel, ODEModel
@@ -25,7 +25,8 @@ def school_holidays(C, C_current, C_target):
 
 class EpiEnv(gymnasium.Env):
 
-    def __init__(self, model, C=None, beta_0=None, beta_1=None, datapoints=None):
+    def __init__(self, model, C=None,
+                 beta_0=None, beta_1=None, datapoints=None):
         super(EpiEnv, self).__init__()
         # under the hood we run this epi model
         self.model = model
@@ -34,31 +35,53 @@ class EpiEnv(gymnasium.Env):
         self.K = len(N)
         self.N = N.sum()
         # contact matrix
-        self.C = np.ones((1, K, K)) if C is None else C
-        # factors of contact matrix for symptomatic people, reshape to match C shape
-        self.C_sym_factor = np.array([1., 0.09, 0.13, 0.09, 0.06, 0.25])[:, None, None]
+        self.C = np.ones((1, self.K, self.K)) if C is None else C
+        # factors of contact matrix for symptomatic people,
+        # reshape to match C shape
+        self.C_sym_factor = np.array([1., 0.09, 0.13,
+                                      0.09, 0.06, 0.25])[:, None, None]
         self.C_full = self.C.copy()
 
         self.beta_0 = beta_0
         self.beta_1 = beta_1
+        self.days_per_timestep = 7
 
-        # the observation space are compartments x age_groups
-        self.observation_space = Box(low=np.zeros((model.n_comp, self.K)), high=np.tile(N, (model.n_comp, 1)), dtype=np.float32)
         # action space is proportional reduction of work, school, leisure
-        self.action_space = Box(low=np.zeros(3), high=np.ones(3), dtype=np.float32)
-        # reward_space is attack-rate for infections, hospitalizations and reduction in social contact
-        self.reward_space = Box(low=np.zeros(3), high=np.array([N.sum(), N.sum(), 1]), dtype=np.float32)
+        self.action_space = Box(low=np.zeros(3), high=np.ones(3),
+                                dtype=np.float64)
+        # the observation space is composed of
+        # (1) days per timestep x compartments x age_groups
+        # (2) a boolean array for holidays per day
+        # (3) the previous action
+        self.observation_space = Tuple([
+            Box(low=np.zeros((self.days_per_timestep, model.n_comp, self.K)),
+                high=np.tile(N,  # FIXME: pop. not preserved!
+                             (self.days_per_timestep, model.n_comp, 1)),
+                dtype=np.int64),
+            Box(low=np.tile(False, (self.days_per_timestep, 1)),
+                high=np.tile(True, (self.days_per_timestep, 1)),
+                dtype=np.bool),
+            Box(low=np.zeros(3), high=np.ones(3), dtype=np.float64)])
+        # reward_space is attack-rate for infections,
+        # hospitalizations and reduction in social contact
+        self.reward_space = Box(low=np.zeros(3), high=np.array([N.sum(),
+                                                                N.sum(), 1]),
+                                dtype=np.float64)
 
         self.datapoints = datapoints
-        self.days_per_timestep = 7
         self.today = datetime.date(2020, 3, 1)
 
         self.events = {}
         # include school holiday
-        for holiday_start, holiday_end in ((datetime.date(2020, 7, 1), datetime.date(2020, 8, 31)),
-                                           (datetime.date(2020, 11, 2), datetime.date(2020, 11, 8)),
-                                           (datetime.date(2020, 12, 21), datetime.date(2021, 1, 3))):
-            # enforce holiday-event (0% school contacts) every day of school-holiday
+        for holiday_start, \
+            holiday_end in ((datetime.date(2020, 7, 1),
+                             datetime.date(2020, 8, 31)),
+                            (datetime.date(2020, 11, 2),
+                             datetime.date(2020, 11, 8)),
+                            (datetime.date(2020, 12, 21),
+                             datetime.date(2021, 1, 3))):
+            # enforce holiday-event (0% school contacts)
+            # every day of school-holiday
             for i in range((holiday_end-holiday_start).days+1):
                 day = holiday_start+datetime.timedelta(days=i)
                 self.events[day] = school_holidays
@@ -71,12 +94,17 @@ class EpiEnv(gymnasium.Env):
         # check for events on this day
         event = self.today in self.events
         # NOTE: intead of returning a boolean, this returns now a dictionary with a boolean inside it.
-        return self.model.current_state, {"has_event": event}
+        res = (np.tile(self.model.current_state, (self.days_per_timestep, 1, 1)),
+               np.tile(False, (self.days_per_timestep, 1)),
+               np.zeros(3)),  {"has_event": event}
+        o, i = res
+        print(f"size of reset obs = {len(o)}")
+        return res
 
     def step(self, action):
         # action is a 3d continuous vector
         p_w, p_s, p_l = action
-        
+
         # match all C components, reshape to match C shape
         p = np.array([1, p_w, p_w, p_s, p_l, p_l])[:, None, None]
         C_target = self.C*p
