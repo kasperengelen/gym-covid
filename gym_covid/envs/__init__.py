@@ -64,14 +64,6 @@ def be_binomial():
     return env
 
 
-class TimestepsLeft(gymnasium.ObservationWrapper):
-
-    def observation(self, observation):
-        # assume useage of TimeLimit
-        timesteps_left = self.env.env._max_episode_steps - self.env.env._elapsed_steps
-        return ([timesteps_left],) + observation
-
-
 def until_2020_09_01(env):
     end = datetime.date(2020, 9, 1)
     timesteps = round((end-env.today).days/env.days_per_timestep)
@@ -129,8 +121,8 @@ def create_env(env_type='ODE', discrete_actions=False, simulate_lockdown=True, u
     if until is not None:
         env = until(env)
         env = EndPenalty(env)
-        if budget is None:
-            env = TimestepsLeft(env)
+        #if budget is None:
+        #    env = TimestepsLeft(env)
     if simulate_lockdown:
         env = Lockdown(env)
     if budget is not None:
