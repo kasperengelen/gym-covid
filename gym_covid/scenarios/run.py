@@ -12,7 +12,7 @@ import datetime
 import gym_covid
 
 
-def plot_states(states, alpha):
+def plot_states(states, alpha, i=0):
     i_hosp_new = states[:, -3].sum(axis=1)
     i_icu_new = states[:, -2].sum(axis=1)
     d_new = states[:, -1].sum(axis=1)
@@ -20,26 +20,34 @@ def plot_states(states, alpha):
     axs = plt.gcf().axes
     # hospitalizations
     ax = axs[0]
-    ax.plot(i_hosp_new, alpha=alpha, label='hosp', color='blue')
-    ax.plot(i_icu_new,  alpha=alpha, label='icu', color='green')
-    ax.plot(i_hosp_new+i_icu_new, label='hosp+icu',
+    ax.plot(i_hosp_new, alpha=alpha,
+            label='_nolegend_' if i != 0 else 'hosp',
+            color='blue')
+    ax.plot(i_icu_new,  alpha=alpha,
+            label='_nolegend_' if i != 0 else 'icu',
+            color='green')
+    ax.plot(i_hosp_new+i_icu_new,
+            label='_nolegend_' if i != 0 else 'hosp+icu',
             alpha=alpha, color='orange')
     ax.legend(loc="best")
 
     # deaths
     ax = axs[1]
-    ax.plot(d_new, alpha=alpha, label='deaths', color='red')
+    ax.plot(d_new, alpha=alpha,
+            label='_nolegend_' if i != 0 else 'deaths',
+            color='red')
 
 
 def plot_simulation(states_per_stoch_run, ode_states=None, datapoints=None):
+
     _, axs = plt.subplots(2, 1)
 
     # these are the colored lines that indicate the compartment values
     if ode_states is not None:
         plot_states(ode_states, 1.)
     # we also have multiple lighter lines for the stochastic states
-    for states in states_per_stoch_run:
-        plot_states(states, 0.2)
+    for i, states in enumerate(states_per_stoch_run):
+        plot_states(states, 0.2, i)
 
     # these are the dots on the plot
     if datapoints is not None:
