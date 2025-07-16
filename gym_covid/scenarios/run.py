@@ -31,13 +31,14 @@ def plot_states(states, alpha):
     ax.plot(d_new, alpha=alpha, label='deaths', color='red')
 
 
-def plot_simulation(states_per_stoch_run, ode_states, datapoints=None):
+def plot_simulation(states_per_stoch_run, ode_states=None, datapoints=None):
     _, axs = plt.subplots(2, 1)
 
     # these are the colored lines that indicate the compartment values
-    for states in states_per_stoch_run:
-        plot_states(states, 0.2)
-    plot_states(ode_states, 1.)
+    if ode_states is not None:
+        for states in states_per_stoch_run:
+            plot_states(states, 0.2)
+        plot_states(ode_states, 1.)
 
     # these are the dots on the plot
     if datapoints is not None:
