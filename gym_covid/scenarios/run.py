@@ -36,9 +36,10 @@ def plot_simulation(states_per_stoch_run, ode_states=None, datapoints=None):
 
     # these are the colored lines that indicate the compartment values
     if ode_states is not None:
-        for states in states_per_stoch_run:
-            plot_states(states, 0.2)
         plot_states(ode_states, 1.)
+    # we also have multiple lighter lines for the stochastic states
+    for states in states_per_stoch_run:
+        plot_states(states, 0.2)
 
     # these are the dots on the plot
     if datapoints is not None:
