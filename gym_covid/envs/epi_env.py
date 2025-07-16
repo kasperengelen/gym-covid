@@ -183,4 +183,5 @@ class EpiEnv(gymnasium.Env):
         # next-state , reward, terminal?, truncated, info
         # provide action as proxy for current SCM, impacts progression of epidemic
         # NOTE: recent versions of gym require a "truncated" return value. I set this to return False.
-        return (state_n, event_n, action.copy()), rew, False, False, {}
+        return (state_n, event_n, action.copy()),\
+                rew, False, False, {"state": state_n}
