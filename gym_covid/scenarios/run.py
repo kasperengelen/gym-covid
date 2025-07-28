@@ -30,6 +30,7 @@ def plot_states(trajectories):
     ax.plot(i_hosp,  # alpha=alpha,
             label='Ambulatory',
             color='green')
+    print(i_hosp.shape)
     ax.fill_between(np.arange(len(i_hosp)),
                     i_hosp - i_hosp_std,
                     i_hosp + i_hosp_std,
