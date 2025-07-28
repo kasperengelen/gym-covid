@@ -58,7 +58,8 @@ def plot_states(trajectories):
                     color='red', alpha=0.2)
 
 
-def plot_simulation(states_per_stoch_run, ode_states=None, datapoints=None):
+def plot_simulation(states_per_stoch_run, ode_states=None, datapoints=None,
+                    xlim=183, ylim=[1000, 300]):
 
     _, axs = plt.subplots(2, 1)
 
@@ -87,9 +88,9 @@ def plot_simulation(states_per_stoch_run, ode_states=None, datapoints=None):
     axs[1].set_xlabel('days')
     axs[1].set_ylabel('deaths')
     for ax in axs:
-        ax.set_xlim([0, 183])
-    axs[0].set_ylim([0, 1000])
-    axs[1].set_ylim([0, 300])
+        ax.set_xlim([0, xlim])
+    axs[0].set_ylim([0, ylim[0]])
+    axs[1].set_ylim([0, ylim[1]])
 
     plt.legend(loc="best")
     plt.show()
