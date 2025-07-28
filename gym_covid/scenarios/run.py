@@ -28,7 +28,7 @@ def plot_states(trajectories):
     # hospitalizations
     ax = axs[0]
     ax.plot(i_hosp,  # alpha=alpha,
-            label='Ambulatory',
+            label='Other',
             color='green')
     print(i_hosp.shape)
     ax.fill_between(np.arange(len(i_hosp)),
