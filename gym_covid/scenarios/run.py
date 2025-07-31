@@ -8,46 +8,70 @@ import matplotlib.pyplot as plt
 import argparse
 import pandas as pd
 import datetime
+import numpy as np
 
 import gym_covid
 
 
-def plot_states(states, alpha, i=0):
-    i_hosp_new = states[:, -3].sum(axis=1)
-    i_icu_new = states[:, -2].sum(axis=1)
-    d_new = states[:, -1].sum(axis=1)
+def plot_states(trajectories):
+    i_hosp = trajectories[:, :, -3].sum(axis=2)
+    i_icu = trajectories[:, :, -2].sum(axis=2)
+    deaths = trajectories[:, :, -1].sum(axis=2)
+    i_hosp_std = i_hosp.std(axis=0)
+    i_hosp = i_hosp.mean(axis=0)
+    i_icu_std = i_icu.std(axis=0)
+    i_icu = i_icu.mean(axis=0)
+    deaths_std = deaths.std(axis=0)
+    deaths = deaths.mean(axis=0)
 
     axs = plt.gcf().axes
     # hospitalizations
     ax = axs[0]
-    ax.plot(i_hosp_new, alpha=alpha,
-            label='_nolegend_' if i != 0 else 'hosp',
-            color='blue')
-    ax.plot(i_icu_new,  alpha=alpha,
-            label='_nolegend_' if i != 0 else 'icu',
+    ax.plot(i_hosp,  # alpha=alpha,
+            label='Other',
             color='green')
-    ax.plot(i_hosp_new+i_icu_new,
-            label='_nolegend_' if i != 0 else 'hosp+icu',
-            alpha=alpha, color='orange')
+    #print(i_hosp.shape)
+    ax.fill_between(np.arange(len(i_hosp)),
+                    i_hosp - i_hosp_std,
+                    i_hosp + i_hosp_std,
+                    color='green', alpha=0.2)
+    ax.plot(i_icu,  # alpha=alpha,
+            label='ICU',
+            color='orange')
+    ax.fill_between(np.arange(len(i_icu)),
+                    i_icu - i_icu_std,
+                    i_icu + i_icu_std,
+                    color='orange', alpha=0.2)
+    #ax.plot(i_hosp_new+i_icu_new,
+    #        label='Total',
+    #        alpha=alpha, color='blue')
     ax.legend(loc="best")
 
     # deaths
     ax = axs[1]
-    ax.plot(d_new, alpha=alpha,
-            label='_nolegend_' if i != 0 else 'deaths',
+    ax.plot(deaths,  # alpha=alpha,
+            label='Deaths',
             color='red')
+    ax.fill_between(np.arange(len(deaths)),
+                    deaths - deaths_std,
+                    deaths + deaths_std,
+                    color='red', alpha=0.2)
 
 
-def plot_simulation(states_per_stoch_run, ode_states=None, datapoints=None):
+def plot_simulation(states_per_stoch_run, ode_states=None, datapoints=None,
+                    xlim=183, ylim=[1000, 300]):
 
     _, axs = plt.subplots(2, 1)
 
     # these are the colored lines that indicate the compartment values
-    if ode_states is not None:
-        plot_states(ode_states, 1.)
+    #if ode_states is not None:
+    #    plot_states(ode_states, 1.)
     # we also have multiple lighter lines for the stochastic states
-    for i, states in enumerate(states_per_stoch_run):
-        plot_states(states, 0.2, i)
+    states_array = np.array(states_per_stoch_run)
+
+    #for i, states in enumerate(states_per_stoch_run):
+    #    plot_states(states, 0.2, i)
+    plot_states(states_array)
 
     # these are the dots on the plot
     if datapoints is not None:
@@ -58,11 +82,15 @@ def plot_simulation(states_per_stoch_run, ode_states=None, datapoints=None):
         axs[1].scatter(np.arange(len(d)), d,
                        facecolors='none', edgecolors='black')
 
-    axs[0].set_xlabel('days')
+    #axs[0].set_xlabel('days')
     axs[0].set_ylabel('hospitalizations')
 
     axs[1].set_xlabel('days')
     axs[1].set_ylabel('deaths')
+    for ax in axs:
+        ax.set_xlim([0, xlim])
+    axs[0].set_ylim([0, ylim[0]])
+    axs[1].set_ylim([0, ylim[1]])
 
     plt.legend(loc="best")
     plt.show()
@@ -111,20 +139,20 @@ def simulate_scenario(env, scenario):
                                       *states.shape[2:])
     # print(f"shape of states 2 = {states.shape}")
 
-    with open('/tmp/run.csv', 'a') as f:
-        f.write('dates,i_hosp_new,i_icu_new,d_new,p_w,p_s,p_l')
-        i_hosp_new = states[:, -3].sum(axis=1)
-        i_icu_new = states[:, -2].sum(axis=1)
-        d_new = states[:, -1].sum(axis=1)
-        # actions.append(actions[-1])
-        actions = np.array(actions)
-        rewards = np.stack(rewards, 0)
-        actions = actions.repeat(7, 0)
-        rewards = rewards.repeat(7, 0)
-        for i in range(len(i_hosp_new)):
-            f.write(f'{days[i]},{i_hosp_new[i]},{i_icu_new[i]},'
-                    f'{d_new[i]},{actions[i][0]},{actions[i][1]},'
-                    f'{actions[i][2]}\n')
+    #with open('/tmp/run.csv', 'a') as f:
+    #    f.write('dates,i_hosp_new,i_icu_new,d_new,p_w,p_s,p_l')
+    #    i_hosp_new = states[:, -3].sum(axis=1)
+    #    i_icu_new = states[:, -2].sum(axis=1)
+    #    d_new = states[:, -1].sum(axis=1)
+    #    # actions.append(actions[-1])
+    #    actions = np.array(actions)
+    #    rewards = np.stack(rewards, 0)
+    #    actions = actions.repeat(7, 0)
+    #    rewards = rewards.repeat(7, 0)
+    #    for i in range(len(i_hosp_new)):
+    #        f.write(f'{days[i]},{i_hosp_new[i]},{i_icu_new[i]},'
+    #                f'{d_new[i]},{actions[i][0]},{actions[i][1]},'
+    #                f'{actions[i][2]}\n')
 
     return states
 
@@ -141,7 +169,6 @@ if __name__ == '__main__':
     import gymnasium
     # from gym_covid import envs
     from gymnasium.wrappers import TimeLimit
-    import numpy as np
 
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('scenario', type=str, help='Scenario file to be run.')
