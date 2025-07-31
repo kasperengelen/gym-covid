@@ -24,6 +24,10 @@ def plot_states(trajectories):
     deaths_std = deaths.std(axis=0)
     deaths = deaths.mean(axis=0)
 
+    deaths_up = deaths + deaths_std
+    print(f"Deaths + sigma <= {deaths_up.max()}")
+    print(f"Deaths <= {deaths.max()}")
+
     axs = plt.gcf().axes
     # hospitalizations
     ax = axs[0]
