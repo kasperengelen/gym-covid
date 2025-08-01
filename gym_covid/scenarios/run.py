@@ -62,6 +62,55 @@ def plot_states(trajectories):
                     color='red', alpha=0.2)
 
 
+def plot_states_small(trajectories):
+    i_hosp = trajectories[:, :, -3].sum(axis=2)
+    i_icu = trajectories[:, :, -2].sum(axis=2)
+    deaths = trajectories[:, :, -1].sum(axis=2)
+    i_hosp_std = i_hosp.std(axis=0)
+    i_hosp = i_hosp.mean(axis=0)
+    i_icu_std = i_icu.std(axis=0)
+    i_icu = i_icu.mean(axis=0)
+    deaths_std = deaths.std(axis=0)
+    deaths = deaths.mean(axis=0)
+
+    deaths_up = deaths + deaths_std
+    print(f"Deaths + sigma <= {deaths_up.max()}")
+    print(f"Deaths <= {deaths.max()}")
+
+    axs = plt.gcf().axes
+    # hospitalizations
+    ax = axs[0]
+    ax.plot(i_hosp,  # alpha=alpha,
+            label='Other hosp.',
+            color='green')
+    #print(i_hosp.shape)
+    ax.fill_between(np.arange(len(i_hosp)),
+                    i_hosp - i_hosp_std,
+                    i_hosp + i_hosp_std,
+                    color='green', alpha=0.2)
+    ax.plot(i_icu,  # alpha=alpha,
+            label='ICU',
+            color='orange')
+    ax.fill_between(np.arange(len(i_icu)),
+                    i_icu - i_icu_std,
+                    i_icu + i_icu_std,
+                    color='orange', alpha=0.2)
+    #ax.plot(i_hosp_new+i_icu_new,
+    #        label='Total',
+    #        alpha=alpha, color='blue')
+    ax.legend(loc="best")
+
+    # deaths
+    ax = axs[0]
+    ax.plot(deaths,  # alpha=alpha,
+            label='Deaths',
+            color='red')
+    ax.fill_between(np.arange(len(deaths)),
+                    deaths - deaths_std,
+                    deaths + deaths_std,
+                    color='red', alpha=0.2)
+
+
 def plot_simulation(states_per_stoch_run, ode_states=None, datapoints=None,
                     xlim=183, ylim=[1000, 300]):
 
@@ -95,6 +144,37 @@ def plot_simulation(states_per_stoch_run, ode_states=None, datapoints=None,
         ax.set_xlim([0, xlim])
     axs[0].set_ylim([0, ylim[0]])
     axs[1].set_ylim([0, ylim[1]])
+
+    plt.legend(loc="best")
+    plt.show()
+
+
+def plot_smaller(states_per_stoch_run, ode_states=None, datapoints=None,
+                 xlim=183, ylim=[1000, 300]):
+
+    plt.rcParams.update({'font.size': 20})
+    _, axs = plt.subplots(1, 1)
+    axs.xaxis.label.set_fontsize(20)
+    axs.yaxis.label.set_fontsize(20)
+
+    # these are the colored lines that indicate the compartment values
+    #if ode_states is not None:
+    #    plot_states(ode_states, 1.)
+    # we also have multiple lighter lines for the stochastic states
+    states_array = np.array(states_per_stoch_run)
+
+    #for i, states in enumerate(states_per_stoch_run):
+    #    plot_states(states, 0.2, i)
+    plot_states_small(states_array)
+
+    #axs[0].set_xlabel('days')
+    #axs[0].set_ylabel('hospitalizations')
+
+    axs.set_xlabel('days')
+    axs.set_ylabel('people')
+    axs.set_xlim([0, xlim])
+    axs.set_ylim([0, ylim[0]])
+    #axs[0].set_ylim([0, ylim[1]])
 
     plt.legend(loc="best")
     plt.show()
